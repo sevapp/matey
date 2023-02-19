@@ -1,6 +1,6 @@
 import { CLICommandBuilder, handlerArgs } from '../src/command.ts';
 import { CLI } from '../src/matey.ts';
-
+import { defaultValidator } from '../examples/myValidators.ts';
 // const addSuffix = new CLICommandBuilder()
 //   .setName('suffix')
 //   .setDescription('Add suffix')
@@ -132,7 +132,7 @@ const writeCmd = new CLICommandBuilder()
     description: 'File to write to',
     required: true,
     type: 'filename',
-    side: 'right',
+    side: 'left',
   })
   .addArgument({
     name: 'message',
@@ -141,13 +141,20 @@ const writeCmd = new CLICommandBuilder()
     type: 'data',
     side: 'right',
   })
+  .addArgument({
+    name: 'email',
+    description: 'email of writer',
+    required: true,
+    type: 'email',
+    side: 'right',
+  })
   .setHandler((args: handlerArgs) => {
     const { filename, message } = args;
     Deno.writeTextFileSync(filename, message);
   }).build();
 
-const args = ['writee', './ololo.txt', 'hahaha'];
-const cli = new CLI();
+const args = ['./ololo.txt', 'write', 'hahaha', 'artp80@gmail.com'];
+const cli = new CLI(defaultValidator);
 cli.addCommand(writeCmd);
 
 cli.parse(args);

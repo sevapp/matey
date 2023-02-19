@@ -1,3 +1,4 @@
+import { Validator } from '../helpers/validator.ts';
 import {
   CLICommand,
   CLICommandBuilder,
@@ -5,8 +6,16 @@ import {
   handlerArgs,
 } from './command.ts';
 
+interface postionOfCommand {
+  [key: string]: number;
+}
+
 export class CLI {
+  constructor(validator: Validator) {
+    this.validator = validator; // тут можно если что дефолт валидатор передать
+  }
   private commands: CLICommand[] = [];
+  private validator: Validator;
 
   public addCommand(command: CLICommand) {
     if (this.commands.find((cmd) => cmd.name === command.name)) {
@@ -19,12 +28,33 @@ export class CLI {
     const knownCommands = this.commands.filter((cmd) => {
       return args.includes(cmd.name);
     });
-    console.log(knownCommands);
 
     if (knownCommands.length === 0) {
       console.error(`No available commands found.`);
       this.printHelp();
       Deno.exit(1);
+    }
+
+    for (const cmd of knownCommands) {
+      const positionOfCommand = args.indexOf(cmd.name);
+      const numOfrightArgs = cmd.arguments.filter((arg) =>
+        arg.side === 'right'
+      ).length;
+      const numOfleftArgs =
+        cmd.arguments.filter((arg) => arg.side === 'left').length;
+
+      const rightArgs = args.slice(
+        positionOfCommand + 1,
+        positionOfCommand + numOfrightArgs + 1,
+      );
+
+      const leftArgs = args.slice(
+        positionOfCommand - numOfleftArgs,
+        positionOfCommand,
+      );
+      console.log(rightArgs);
+      console.log(leftArgs);
+      // cmd.handler(parsedArgs);
     }
   }
 
