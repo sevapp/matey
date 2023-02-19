@@ -1,15 +1,27 @@
 export type handlerArgs = Record<string, string>;
 export interface CommandArgument {
   name: string;
+  type?: string;
   description: string;
   required?: boolean;
+
+  side?: 'left' | 'right';
 }
+
+export const DefaultCommandArgument: Pick<
+  CommandArgument,
+  'type' | 'required' | 'side'
+> = {
+  type: 'data',
+  required: false,
+  side: 'right',
+};
 
 export interface CLICommand {
   name: string;
   description: string;
   arguments: CommandArgument[];
-  subcommands: CLICommand[];
+  // subcommands: CLICommand[];
   handler: (args: handlerArgs) => void;
 }
 
@@ -17,7 +29,7 @@ export class CLICommandBuilder {
   private name: string = '';
   private description: string = '';
   private arguments: CommandArgument[] = [];
-  private subcommands: CLICommand[] = [];
+  // private subcommands: CLICommand[] = [];
   private handler?: (args: handlerArgs) => void;
 
   setName(name: string): CLICommandBuilder {
@@ -35,10 +47,10 @@ export class CLICommandBuilder {
     return this;
   }
 
-  addSubcommand(subcommand: CLICommand): CLICommandBuilder {
-    this.subcommands.push(subcommand);
-    return this;
-  }
+  // addSubcommand(subcommand: CLICommand): CLICommandBuilder {
+  //   this.subcommands.push(subcommand);
+  //   return this;
+  // }
 
   setHandler(
     handler: (args: handlerArgs) => void,
@@ -60,7 +72,7 @@ export class CLICommandBuilder {
       name: this.name,
       description: this.description,
       arguments: this.arguments,
-      subcommands: this.subcommands,
+      // subcommands: this.subcommands,
       handler: this.handler,
     };
   }
