@@ -1,6 +1,7 @@
 export type handlerArgs = Record<string, string>;
 export interface CommandArgument {
   name: string;
+  prefixName?: string; // - or --
   type?: string;
   description: string;
   required?: boolean;
@@ -10,11 +11,12 @@ export interface CommandArgument {
 
 export const DefaultCommandArgument: Pick<
   CommandArgument,
-  'type' | 'required' | 'side'
+  'type' | 'required' | 'side' | 'prefixName'
 > = {
   type: 'data',
-  required: false,
+  required: true,
   side: 'right',
+  prefixName: '',
 };
 
 export interface CLICommand {
@@ -29,6 +31,8 @@ export class CLICommandBuilder {
   private name: string = '';
   private description: string = '';
   private arguments: CommandArgument[] = [];
+
+  private externalArgs: CommandArgument[] = [];
   // private subcommands: CLICommand[] = [];
   private handler?: (args: handlerArgs) => void;
 

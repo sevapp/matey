@@ -1,6 +1,7 @@
 import { CLICommandBuilder, handlerArgs } from '../src/command.ts';
 import { CLI } from '../src/matey.ts';
 import { defaultValidator } from '../examples/myValidators.ts';
+import { DefaultCommandArgument } from '../src/command.ts';
 // const addSuffix = new CLICommandBuilder()
 //   .setName('suffix')
 //   .setDescription('Add suffix')
@@ -124,37 +125,80 @@ import { defaultValidator } from '../examples/myValidators.ts';
 // deno run --allow-all examples/cliEcho.ts diff 5 12
 // deno run --allow-all examples/cliEcho.ts diff --help
 // deno run --allow-all examples/cliEcho.ts write suffix --help
-const writeCmd = new CLICommandBuilder()
-  .setName('write')
-  .setDescription('Write to file (write <filename> <message>))')
+// const writeCmd = new CLICommandBuilder()
+//   .setName('write')
+//   .setDescription('Write to file (write <filename> <message>))')
+//   .addArgument({
+//     name: 'filename',
+//     description: 'File to write to',
+//     required: true,
+//     type: 'filename',
+//     side: 'left',
+//   })
+//   .addArgument({
+//     name: 'message',
+//     description: 'Message to write',
+//     required: true,
+//     type: 'data',
+//     side: 'right',
+//   })
+//   .addArgument({
+//     name: 'email',
+//     description: 'email of writer',
+//     required: true,
+//     type: 'email',
+//     side: 'right',
+//   })
+//   .setHandler((args: handlerArgs) => {
+//     const { filename, message } = args;
+//     Deno.writeTextFileSync(filename, message);
+//   }).build();
+
+// // const args = ['./ololo.txt', 'write', 'hahaha', 'artp80@gmail.com'];
+// const cli = new CLI(defaultValidator);
+// cli.addCommand(writeCmd);
+
+// cli.parse(Deno.args);
+//email send --to john.doe@example.com --subject "Test email"
+const sendCmd = new CLICommandBuilder()
+  .setName('send')
+  .setDescription('Send email')
   .addArgument({
-    name: 'filename',
-    description: 'File to write to',
-    required: true,
-    type: 'filename',
-    side: 'left',
-  })
-  .addArgument({
-    name: 'message',
-    description: 'Message to write',
-    required: true,
-    type: 'data',
-    side: 'right',
-  })
-  .addArgument({
-    name: 'email',
-    description: 'email of writer',
-    required: true,
+    ...DefaultCommandArgument,
+    name: 'to',
+    description: 'Email to send to',
+    prefixName: '--to',
     type: 'email',
-    side: 'right',
   })
-  .setHandler((args: handlerArgs) => {
-    const { filename, message } = args;
-    Deno.writeTextFileSync(filename, message);
-  }).build();
+  .addArgument({
+    ...DefaultCommandArgument,
+    name: 'subject',
+    description: 'Subject of email',
+    prefixName: '--subject',
+  })
+  .setHandler(() => {}).build();
 
-const args = ['./ololo.txt', 'write', 'hahaha', 'artp80@gmail.com'];
+const listCmd = new CLICommandBuilder()
+  .setName('list')
+  .setDescription('List emails')
+  .addArgument({
+    ...DefaultCommandArgument,
+    name: 'from',
+    description: 'Email from',
+    prefixName: '--from',
+  })
+  .setHandler(() => {})
+  .build();
+
 const cli = new CLI(defaultValidator);
-cli.addCommand(writeCmd);
+cli.addCommand(sendCmd);
+cli.addCommand(listCmd);
 
-cli.parse(args);
+let massages: Record<string, string> = {};
+
+try {
+  cli.parse(['send', '--to', 'amail.ru', 'ololo']);
+  cli.parse(['list', '--from', 'a@mail.ru']);
+} catch (e) {
+  console.log((e as Error).message);
+}
