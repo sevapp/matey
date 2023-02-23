@@ -5,17 +5,14 @@ export interface CommandArgument {
   type?: string;
   description: string;
   required?: boolean;
-
-  side?: 'left' | 'right';
 }
 
 export const DefaultCommandArgument: Pick<
   CommandArgument,
-  'type' | 'required' | 'side' | 'prefixName'
+  'type' | 'required' | 'prefixName'
 > = {
   type: 'data',
   required: true,
-  side: 'right',
   prefixName: '',
 };
 
@@ -48,6 +45,11 @@ export class CLICommandBuilder {
 
   addArgument(argument: CommandArgument): CLICommandBuilder {
     this.arguments.push(argument);
+    if (!argument.required && !argument.prefixName) {
+      throw new Error(
+        'Argument must have prefixName if it is not required',
+      );
+    }
     return this;
   }
 

@@ -5,7 +5,7 @@
     }
   },
   "tasks": {
-    "start": "deno run --allow-all src/matey.ts"
+    "start": "deno run --allow-all examples/cliEcho.ts"
   },
   "lint": {
     "files": {
