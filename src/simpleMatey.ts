@@ -49,6 +49,17 @@ export class CLI {
         return this.parse(rest, subcommand);
       } else {
         const allRest = [subCmd, ...rest];
+        if (
+          allRest.length < parentCmd.arguments.filter((arg) => {
+            return arg.required;
+          }).length
+        ) {
+          throw new Errors.MissingArgumentError(
+            `Expected ${parentCmd.arguments.length} arguments <${
+              parentCmd.arguments.map((arg) => arg.name).join(',')
+            }>, received nothing.`,
+          );
+        }
         if (parentCmd.arguments && parentCmd.arguments.length > 0) {
           const parsedArgs: handlerArgs = {};
           const requiredArgs = parentCmd.arguments.filter((arg) =>

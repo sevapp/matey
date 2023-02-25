@@ -21,6 +21,14 @@ const sendCmd = new CLICommandBuilder()
   })
   .addArgument({
     ...DefaultCommandArgument,
+    name: 'noResponse',
+    description: 'Write  if you don\'t want to get response',
+    prefixName: '--noResponse',
+    type: 'flag',
+    required: false,
+  })
+  .addArgument({
+    ...DefaultCommandArgument,
     name: 'msg',
     description: 'Message to send',
     prefixName: '--msg',
@@ -84,4 +92,24 @@ Deno.test('Missing argument ', () => {
   assertThrows(() => {
     cli.parse(['email', 'send', 'Hello']);
   }, Errors.MissingArgumentError);
+});
+
+Deno.test('No arguments, but command have required ', () => {
+  assertThrows(() => {
+    cli.parse(['email', 'send']);
+  }, Errors.MissingArgumentError);
+});
+
+Deno.test('Stable work with flag', () => {
+  assertEquals(
+    cli.parse([
+      'email',
+      'send',
+      '--to',
+      'a@mail.ru',
+      'Hello',
+      '--noResponse',
+    ]),
+    { 'to': 'a@mail.ru', 'msg': 'Hello', 'noResponse': true },
+  );
 });

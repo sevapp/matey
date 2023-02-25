@@ -233,6 +233,14 @@ const sendCmd = new CLICommandBuilder()
     description: 'Message to send',
     prefixName: '--msg',
   })
+  .addArgument({
+    ...DefaultCommandArgument,
+    name: 'noResponse',
+    description: 'Write  if you don\'t want to get response',
+    prefixName: '--subject',
+    type: 'flag',
+    required: false,
+  })
   .setHandler((args: handlerArgs) => {
     console.log(`Sent ${args.msg} to ${args.to}`);
   }).build();
@@ -259,7 +267,7 @@ const emailCmd = new CLICommandBuilder()
   }).build();
 
 cli.addCommand(emailCmd);
-const args = ['email', 'send', 'Hello'];
+const args = ['email', 'send', '--to'];
 try {
   console.log(cli.parse(args));
 } catch (e) {
