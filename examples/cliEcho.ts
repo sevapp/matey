@@ -1,5 +1,5 @@
 import { CLICommandBuilder, handlerArgs } from '../src/command.ts';
-import { CLI } from '../src/matey2.ts';
+import { CLI } from '../src/simpleMatey.ts';
 import { defaultValidator } from '../examples/myValidators.ts';
 import { DefaultCommandArgument } from '../src/command.ts';
 // const addSuffix = new CLICommandBuilder()
@@ -160,62 +160,63 @@ import { DefaultCommandArgument } from '../src/command.ts';
 
 // cli.parse(Deno.args);
 //email send --to john.doe@example.com --subject "Test email"
-const sendCmd = new CLICommandBuilder()
-  .setName('send')
-  .setDescription('Send email')
-  .addArgument({
-    ...DefaultCommandArgument,
-    name: 'to',
-    description: 'Email to send to',
-    prefixName: '--to',
-    type: 'email',
-  })
-  .addArgument({
-    ...DefaultCommandArgument,
-    name: 'subject',
-    description: 'Subject of email',
-    prefixName: '--subject',
-  })
-  .setHandler(() => {}).build();
+// const sendCmd = new CLICommandBuilder()
+//   .setName('send')
+//   .setDescription('Send email')
+//   .addArgument({
+//     ...DefaultCommandArgument,
+//     name: 'to',
+//     description: 'Email to send to',
+//     prefixName: '--to',
+//     type: 'email',
+//   })
+//   .addArgument({
+//     ...DefaultCommandArgument,
+//     name: 'subject',
+//     description: 'Subject of email',
+//     prefixName: '--subject',
+//   })
+//   .setHandler(() => {}).build();
 
-const listCmd = new CLICommandBuilder()
-  .setName('list')
-  .setDescription('List emails')
-  .addArgument({
-    ...DefaultCommandArgument,
-    name: 'from',
-    description: 'Email from',
-    prefixName: '--from',
-  })
-  .setHandler(() => {})
-  .build();
+// const listCmd = new CLICommandBuilder()
+//   .setName('list')
+//   .setDescription('List emails')
+//   .addArgument({
+//     ...DefaultCommandArgument,
+//     name: 'from',
+//     description: 'Email from',
+//     prefixName: '--from',
+//   })
+//   .setHandler(() => {})
+//   .build();
+
+// const cli = new CLI(defaultValidator);
+// cli.addCommand(sendCmd);
+// cli.addCommand(listCmd);
+
+// let massages: Record<string, string> = {};
+
+// try {
+//   cli.parse([
+//     'send',
+//     '--to',
+//     'q@mail.ru',
+//     '--subject',
+//     'Hello',
+//     'list',
+//     'b@gmail.com',
+//   ]);
+//   console.log('------------------');
+//   cli.parse([
+//     'send',
+//     'help',
+//   ]);
+//   // cli.parse(['list', 'a@mail.ru']);
+// } catch (e) {
+//   console.log((e as Error).message);
+// }
 
 const cli = new CLI(defaultValidator);
-cli.addCommand(sendCmd);
-cli.addCommand(listCmd);
-
-let massages: Record<string, string> = {};
-
-try {
-  cli.parse([
-    'send',
-    '--to',
-    'q@mail.ru',
-    '--subject',
-    'Hello',
-    'list',
-    'b@gmail.com',
-  ]);
-  console.log('------------------');
-  cli.parse([
-    'send',
-    'help',
-  ]);
-  // cli.parse(['list', 'a@mail.ru']);
-} catch (e) {
-  console.log((e as Error).message);
-}
-
 const sendCmd = new CLICommandBuilder()
   .setName('send')
   .setDescription('Send @msg to @to')
@@ -248,17 +249,19 @@ const listCmd = new CLICommandBuilder()
     console.log(`Listed emails from ${args.from}`);
   }).build();
 
-
 const emailCmd = new CLICommandBuilder()
   .setName('email')
   .setDescription('Email commands')
-  .addSubcommand(sendCmd);
+  .addSubcommand(sendCmd)
   .addSubcommand(listCmd)
+  .setHandler(() => {
+    // this.help()
+  }).build();
 
-const args = ["email", "send", "--to", "a@mail.ru", "--msg", "Hello"];
-try{
-  cli.parse(args);
-}
-catch(e){
+cli.addCommand(emailCmd);
+const args = ['email', 'send', 'Hello'];
+try {
+  console.log(cli.parse(args));
+} catch (e) {
   console.log((e as Error).message);
 }

@@ -1,5 +1,5 @@
-type ValidationFunction = (data: string) => boolean;
-export class ArgumentValidError extends Error {}
+type ValidationFunction = (data: string) => [boolean, string?];
+import { ArgumentValidError } from '../src/errors.ts';
 export class Validator {
   private validators: { [key: string]: ValidationFunction } = {};
 
@@ -10,7 +10,10 @@ export class Validator {
     this.validators[type] = validator;
   }
 
-  public validate(type: string | undefined, data: string): boolean {
+  public validate(
+    type: string | undefined,
+    data: string,
+  ): [boolean, string?] {
     if (!type) {
       throw new ArgumentValidError(
         `No validator found for type ${type}`,

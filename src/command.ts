@@ -1,4 +1,6 @@
-export type handlerArgs = Record<string, string>;
+// import { v1 } from 'https://deno.land/std@0.177.0/uuid/mod.ts';
+// const { generate } = v1;
+export type handlerArgs = Record<string, string | boolean>;
 export interface CommandArgument {
   name: string;
   prefixName?: string; // - or --
@@ -20,17 +22,15 @@ export interface CLICommand {
   name: string;
   description: string;
   arguments: CommandArgument[];
-  // subcommands: CLICommand[];
+  subcommands: CLICommand[];
   handler: (args: handlerArgs) => void;
 }
 
 export class CLICommandBuilder {
-  private name: string = '';
-  private description: string = '';
+  private name = '';
+  private description = '';
   private arguments: CommandArgument[] = [];
-
-  private externalArgs: CommandArgument[] = [];
-  // private subcommands: CLICommand[] = [];
+  private subcommands: CLICommand[] = [];
   private handler?: (args: handlerArgs) => void;
 
   setName(name: string): CLICommandBuilder {
@@ -44,19 +44,19 @@ export class CLICommandBuilder {
   }
 
   addArgument(argument: CommandArgument): CLICommandBuilder {
-    this.arguments.push(argument);
     if (!argument.required && !argument.prefixName) {
       throw new Error(
         'Argument must have prefixName if it is not required',
       );
     }
+    this.arguments.push(argument);
     return this;
   }
 
-  // addSubcommand(subcommand: CLICommand): CLICommandBuilder {
-  //   this.subcommands.push(subcommand);
-  //   return this;
-  // }
+  addSubcommand(subcommand: CLICommand): CLICommandBuilder {
+    this.subcommands.push(subcommand);
+    return this;
+  }
 
   setHandler(
     handler: (args: handlerArgs) => void,
@@ -78,7 +78,7 @@ export class CLICommandBuilder {
       name: this.name,
       description: this.description,
       arguments: this.arguments,
-      // subcommands: this.subcommands,
+      subcommands: this.subcommands,
       handler: this.handler,
     };
   }
