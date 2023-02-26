@@ -113,3 +113,22 @@ Deno.test('Stable work with flag', () => {
     { 'to': 'a@mail.ru', 'msg': 'Hello', 'noResponse': true },
   );
 });
+
+Deno.test('No command ', () => {
+  assertThrows(() => {
+    cli.parse(['send']);
+  }, Errors.NoCommandError);
+});
+
+Deno.test('Invalid validation ', () => {
+  assertThrows(() => {
+    cli.parse([
+      'email',
+      'send',
+      '--to',
+      'amail.ru',
+      'Hello',
+      '--noResponse',
+    ]);
+  }, Errors.ArgumentValidError);
+});

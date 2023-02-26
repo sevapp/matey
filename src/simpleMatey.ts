@@ -20,7 +20,7 @@ export class CLI {
   }
 
   public addCommand(command: CLICommand) {
-    if (this.commands.find((key) => key.name === command.name)) {
+    if (this.commands.some((key) => key.name === command.name)) {
       throw new Error(`Command "${command.name}" already exists.`);
     }
 
@@ -60,7 +60,7 @@ export class CLI {
             }>, received nothing.`,
           );
         }
-        if (parentCmd.arguments && parentCmd.arguments.length > 0) {
+        if (parentCmd.arguments?.length) {
           const parsedArgs: handlerArgs = {};
           const requiredArgs = parentCmd.arguments.filter((arg) =>
             arg.required
@@ -83,13 +83,14 @@ export class CLI {
                   if (option.required) requiredArgsCount++;
                   const value = allRest[index + 1];
                   if (value) {
-                    const isValid = this.validator.validate(
+                    const [isValid, mes] = this.validator.validate(
                       option.type,
                       value,
                     );
+                    // console.log(isValid, value, option.type);
                     if (!isValid) {
                       throw new Errors.ArgumentValidError(
-                        `Invalid value ${value} for option ${term}`,
+                        `Invalid value ${value} for option ${term}. More info: ${mes}`,
                       );
                     }
                     parsedArgs[option.name] = value;
@@ -111,7 +112,7 @@ export class CLI {
                   `Unknown optional argument ${term} without prefix`,
                 );
               }
-              const isValid = this.validator.validate(
+              const [isValid, mes] = this.validator.validate(
                 requiredArgs[requiredArgsCount].type,
                 term,
               );
@@ -119,7 +120,7 @@ export class CLI {
                 throw new Errors.ArgumentValidError(
                   `Invalid value ${term} for option ${
                     requiredArgs[requiredArgsCount].name
-                  }`,
+                  }. More info: ${mes}`,
                 );
               }
               parsedArgs[requiredArgs[requiredArgsCount].name] = term;
