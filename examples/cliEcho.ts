@@ -65,7 +65,6 @@ cli.addCommand(emailCmd);
 const args = [
   'email',
   'send',
-  '--to',
   'amail.ru',
   'send',
 ];

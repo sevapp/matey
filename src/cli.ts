@@ -94,14 +94,21 @@ export class CLI {
                   if (option.required) requiredArgsCount++;
                   const value = allRest[index + 1];
                   if (value) {
-                    const [isValid, mes] = this.validator.validate(
+                    const isValid = this.validator.validate(
                       option.type,
                       value,
                     );
                     // console.log(isValid, value, option.type);
                     if (!isValid) {
+                      const validResult = this.validator.getExamples(
+                        option.type,
+                      );
                       throw new Errors.ArgumentValidError(
-                        `Invalid value "${value}" for option <${option.name}>. More info:\n${mes}`,
+                        `Invalid value "${value}" for option <${option.name}>.\nOption value type must be: ${option.type}\nExmaples: ${
+                          validResult
+                            ? validResult
+                            : 'No infomatoin about valid values'
+                        }`,
                       );
                     }
                     parsedArgs[option.name] = value;
@@ -123,15 +130,24 @@ export class CLI {
                   `Unknown optional argument ${term} without prefix`,
                 );
               }
-              const [isValid, mes] = this.validator.validate(
+              const isValid = this.validator.validate(
                 requiredArgs[requiredArgsCount].type,
                 term,
               );
               if (!isValid) {
+                const validResult = this.validator.getExamples(
+                  requiredArgs[requiredArgsCount].type,
+                );
                 throw new Errors.ArgumentValidError(
-                  `Invalid value ${term} for option ${
+                  `Invalid value "${term}" for option <${
                     requiredArgs[requiredArgsCount].name
-                  }. More info: ${mes}`,
+                  }>.\nOption value type: ${
+                    requiredArgs[requiredArgsCount].type
+                  }\nExamples: ${
+                    validResult
+                      ? validResult
+                      : 'No infomatoin about valid values'
+                  }`,
                 );
               }
               parsedArgs[requiredArgs[requiredArgsCount].name] = term;
