@@ -5,17 +5,23 @@ import {
   CommandArgument,
   handlerArgs,
 } from './command.ts';
+import { CMDService } from './commandService.ts';
 import * as Errors from './errors.ts';
 
 export class CLI {
   constructor(validator: Validator) {
     this.validator = validator;
+    this.cmdService = new CMDService();
+    this.cmdService.addSpecCommand(
+      'help',
+      (specCmd: string, argCmd: CLICommand) => {
+        console.log(`${specCmd}`);
+        console.log(`${argCmd.name} - ${argCmd.description}`);
+      },
+    );
   }
   private validator: Validator;
-
-  private helpCmd = new CLICommandBuilder()
-    .setName('help')
-    .setDescription('Show help');
+  public cmdService: CMDService;
 
   private commands: CLICommand[] = [];
 
@@ -42,13 +48,19 @@ export class CLI {
     args: string[],
     parentCmd: CLICommand | null = null,
   ): handlerArgs {
+    const specCmd = args.find((term) => {
+      return this.cmdService.checkSpecCommand(term);
+    });
+    args = specCmd
+      ? args.filter((term) => {
+        term !== specCmd;
+      })
+      : args;
     if (!parentCmd) {
       const [cmd, ...rest] = args;
       const command = this.commands.find((key) => key.name === cmd);
       if (!command) {
-        throw new Errors.NoCommandError(
-          `Command "${cmd}" not found.`,
-        );
+        throw new Errors.NoCommandError(cmd);
       }
       return this.parse(rest, command);
     } else {
@@ -60,16 +72,17 @@ export class CLI {
         return this.parse(rest, subcommand);
       } else {
         const allRest = [subCmd, ...rest];
+
+        if (specCmd) {
+          this.cmdService.handleSpecCommand(specCmd, parentCmd);
+          return {};
+        }
         if (
           allRest.length < parentCmd.arguments.filter((arg) => {
             return arg.required;
           }).length
         ) {
-          throw new Errors.MissingArgumentError(
-            `Expected ${parentCmd.arguments.length} arguments <${
-              parentCmd.arguments.map((arg) => arg.name).join(',')
-            }>, received nothing.`,
-          );
+          throw new Errors.MissingArgumentError(parentCmd);
         }
         if (parentCmd.arguments?.length) {
           const parsedArgs: handlerArgs = {};
@@ -98,37 +111,28 @@ export class CLI {
                       option.type,
                       value,
                     );
-                    // console.log(isValid, value, option.type);
                     if (!isValid) {
                       const validResult = this.validator.getExamples(
                         option.type,
                       );
                       throw new Errors.ArgumentValidError(
-                        `Invalid value "${value}" for option <${option.name}>.\nOption value type must be: ${option.type}\nExmaples: ${
-                          validResult
-                            ? validResult
-                            : 'No infomatoin about valid values'
-                        }`,
+                        value,
+                        option,
+                        validResult,
                       );
                     }
                     parsedArgs[option.name] = value;
                     index += 2;
                   } else {
-                    throw new Errors.MissingValueError(
-                      `Option ${option.name} requires a value`,
-                    );
+                    throw new Errors.MissingValueError(option);
                   }
                 }
               } else {
-                throw new Errors.UnknownOptionError(
-                  `Unknown option ${term}`,
-                );
+                throw new Errors.UnknownOptionError(term);
               }
             } else {
               if (requiredArgsCount === requiredArgs.length) {
-                throw new Errors.ExtraArgumentError(
-                  `Unknown optional argument ${term} without prefix`,
-                );
+                throw new Errors.ExtraOptionalArgumentError(term);
               }
               const isValid = this.validator.validate(
                 requiredArgs[requiredArgsCount].type,
@@ -139,15 +143,9 @@ export class CLI {
                   requiredArgs[requiredArgsCount].type,
                 );
                 throw new Errors.ArgumentValidError(
-                  `Invalid value "${term}" for option <${
-                    requiredArgs[requiredArgsCount].name
-                  }>.\nOption value type: ${
-                    requiredArgs[requiredArgsCount].type
-                  }\nExamples: ${
-                    validResult
-                      ? validResult
-                      : 'No infomatoin about valid values'
-                  }`,
+                  term,
+                  requiredArgs[requiredArgsCount],
+                  validResult,
                 );
               }
               parsedArgs[requiredArgs[requiredArgsCount].name] = term;
@@ -156,17 +154,17 @@ export class CLI {
             }
           }
           if (requiredArgsCount < requiredArgs.length) {
-            throw new Errors.MissingArgumentError(
-              `Expected ${requiredArgs.length} arguments <${
-                parentCmd.arguments.map((arg) => arg.name).join(',')
-              }>, received ${requiredArgsCount} only.`,
+            throw new Errors.MissingRequiedArgsError(
+              requiredArgs,
+              parentCmd,
+              requiredArgsCount,
             );
           }
           return parsedArgs;
         }
         if (rest.length > 0) {
           throw new Errors.ExtraArgumentError(
-            `Command "${parentCmd.name}" does not accept arguments.`,
+            parentCmd,
           );
         }
         return {};

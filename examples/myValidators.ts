@@ -10,12 +10,12 @@ defaultValidator.addValidator(
 defaultValidator.addValidator(
   'email',
   (data: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data),
-  ['ololo@gmail.com', 'trololo@gmail.com'],
+  ['person@domain.com', 'deno@deno.com'],
 );
 defaultValidator.addValidator('filename', (data: string) => {
   const filenameRegex = /^[a-zA-Z0-9-_\\/]+\.[a-zA-Z0-9]+$/;
   return filenameRegex.test(data);
-});
+}, ['example.txt', 'user/folder/image.jpg']);
 
 defaultValidator.addValidator(
   'uuid',
@@ -24,6 +24,10 @@ defaultValidator.addValidator(
       .test(
         data,
       ),
+  [
+    'd41d8cd9-8f00-3204-a980-0998ecf8427e',
+    '57daa80e-51d4-4e24-8e4c-94a4a960e0a1',
+  ],
 );
 
 defaultValidator.addValidator(
@@ -33,16 +37,18 @@ defaultValidator.addValidator(
       .test(
         data,
       ),
+  ['192.168.0.1', '127.0.0.1'],
 );
 
 defaultValidator.addValidator(
   'url',
   (data: string) => /^(ftp|http|https):\/\/[^ "]+$/.test(data),
+  ['http://www.example.com', 'https://www.example.com'],
 );
 
 defaultValidator.addValidator('data', () => {
   return true;
-});
+}, ['2022-03-01', '2022-03-02']);
 
 defaultValidator.addValidator(
   'phone',
@@ -51,11 +57,13 @@ defaultValidator.addValidator(
       .test(
         data,
       ),
+  ['+1-202-555-0123', '555-1234'],
 );
 
 defaultValidator.addValidator(
   'time',
   (data: string) => /^([01]\d|2[0-3]):([0-5]\d)$/.test(data),
+  ['12:00', '23:59'],
 );
 
 export { defaultValidator };

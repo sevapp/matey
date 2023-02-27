@@ -1,41 +1,78 @@
+import { valueExamples } from '../helpers/validator.ts';
+import { CLICommand } from './command.ts';
+
 export class MissingArgumentError extends Error {
-  constructor(message?: string) {
-    super(message);
+  constructor(parentCmd: CLICommand) {
+    super(
+      `Expected ${parentCmd.arguments.length} arguments <${
+        parentCmd.arguments.map((arg) => arg.name).join(',')
+      }>, received nothing.`,
+    );
     this.name = 'MissingArgumentError';
   }
 }
 
 export class NoCommandError extends Error {
-  constructor(message?: string) {
-    super(message);
+  constructor(cmd: string) {
+    super(`Command "${cmd}" not found.`);
     this.name = 'NoCommandError';
   }
 }
 
 export class MissingValueError extends Error {
-  constructor(message?: string) {
-    super(message);
+  constructor(option: { name: string }) {
+    super(`Option ${option.name} requires a value`);
+    this.name = 'MissingValueError';
+  }
+}
+
+export class MissingRequiedArgsError extends Error {
+  constructor(
+    requiredArgs: { name: string }[],
+    parentCmd: CLICommand,
+    requiredArgsCount: number,
+  ) {
+    super(
+      `Expected ${requiredArgs.length} arguments <${
+        parentCmd.arguments.map((arg) => arg.name).join(',')
+      }>, received ${requiredArgsCount} only.`,
+    );
     this.name = 'MissingValueError';
   }
 }
 
 export class UnknownOptionError extends Error {
-  constructor(message?: string) {
-    super(message);
+  constructor(term: string) {
+    super(`Unknown option ${term}`);
     this.name = 'UnknownOptionError';
   }
 }
 
+export class ExtraOptionalArgumentError extends Error {
+  constructor(term: string) {
+    super(`Unknown optional argument ${term} without prefix`);
+    this.name = 'ExtraArgumentError';
+  }
+}
+
 export class ExtraArgumentError extends Error {
-  constructor(message?: string) {
-    super(message);
+  constructor(parentCmd: CLICommand) {
+    super(`Command "${parentCmd.name}" does not accept arguments.`);
     this.name = 'ExtraArgumentError';
   }
 }
 
 export class ArgumentValidError extends Error {
-  constructor(message?: string) {
-    super(message);
+  constructor(
+    value: string,
+    option: { name: string; type: string },
+    validResult?: valueExamples | null,
+  ) {
+    super(
+      `Invalid value "${value}" for option <${option.name}>.\nOption value type must be: ${option.type}\nExmaples: ${
+        validResult ? validResult : 'No infomatoin about valid values'
+      }`,
+    );
     this.name = 'ArgumentValidError';
   }
 }

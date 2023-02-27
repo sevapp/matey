@@ -58,18 +58,14 @@ const emailCmd = new CLICommandBuilder()
   .addSubcommand(sendCmd)
   .addSubcommand(listCmd)
   .setHandler(() => {
-    // this.help()
   }).build();
 
 cli.addCommand(emailCmd);
-const args = [
-  'email',
-  'send',
-  'amail.ru',
-  'send',
-];
+const args = ['help', 'email', 'send', 'a@mail.ru', 'Hello'];
+
 try {
   console.log(cli.parse(args));
+  // cli.cmdService.handleSpecCommand('help', sendCmd);
 } catch (e) {
   console.log((e as Error).message);
 }

@@ -1,6 +1,13 @@
 type ValidationFunction = (data: string) => boolean;
-type valueExamples = string[];
+export type valueExamples = string[];
 import { ArgumentValidError } from '../src/errors.ts';
+
+export class NoValidatorError extends Error {
+  constructor(type: string) {
+    super(`No validator found for type ${type}`);
+    this.name = 'ExtraArgumentError';
+  }
+}
 export class Validator {
   private validators: {
     [key: string]: ValidationFunction | [
@@ -24,7 +31,7 @@ export class Validator {
     data: string,
   ): boolean {
     if (!(type in this.validators)) {
-      throw new ArgumentValidError(
+      throw new NoValidatorError(
         `No validator found for type ${type}`,
       );
     }
@@ -37,9 +44,7 @@ export class Validator {
 
   public getExamples(type: string): valueExamples | null {
     if (!(type in this.validators)) {
-      throw new ArgumentValidError(
-        `No validator found for type ${type}`,
-      );
+      throw new NoValidatorError(type);
     }
     const validator = this.validators[type];
     if (Array.isArray(validator)) {
