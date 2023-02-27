@@ -13,6 +13,10 @@ export class CLI {
   }
   private validator: Validator;
 
+  private helpCmd = new CLICommandBuilder()
+    .setName('help')
+    .setDescription('Show help');
+
   private commands: CLICommand[] = [];
 
   public setValidator(validator: Validator) {
@@ -27,6 +31,13 @@ export class CLI {
     this.commands.push(command);
   }
 
+  /**
+   * Parse array of arguments and return object with parsed arguments
+   * @param {string[]} args
+   * @param {CLICommand | null} parentCmd
+   * @returns {handlerArgs} Object with parsed arguments
+   * or throw error if command not found or arguments are invalid
+   */
   public parse(
     args: string[],
     parentCmd: CLICommand | null = null,
@@ -90,7 +101,7 @@ export class CLI {
                     // console.log(isValid, value, option.type);
                     if (!isValid) {
                       throw new Errors.ArgumentValidError(
-                        `Invalid value ${value} for option ${term}. More info: ${mes}`,
+                        `Invalid value "${value}" for option <${option.name}>. More info:\n${mes}`,
                       );
                     }
                     parsedArgs[option.name] = value;
@@ -146,6 +157,4 @@ export class CLI {
       }
     }
   }
-
-  //   public execute(args: string[]) {
 }

@@ -1,28 +1,52 @@
 type ValidationFunction = (data: string) => [boolean, string?];
+type valueExamples = string[];
 import { ArgumentValidError } from '../src/errors.ts';
 export class Validator {
-  private validators: { [key: string]: ValidationFunction } = {};
+  private validators: {
+    [key: string]: ValidationFunction | [
+      ValidationFunction,
+      valueExamples,
+    ];
+  } = {};
 
-  public addValidFunc(
+  public addValidator(
     type: string,
     validator: ValidationFunction,
+    examples?: valueExamples,
   ): void {
-    this.validators[type] = validator;
+    if (!examples) {
+      this.validators[type] = validator, examples;
+    } else this.validators[type] = [validator, examples];
   }
 
   public validate(
-    type: string | undefined,
+    type: string,
     data: string,
   ): [boolean, string?] {
-    if (!type) {
+    if (!(type in this.validators)) {
       throw new ArgumentValidError(
         `No validator found for type ${type}`,
       );
     }
     const validator = this.validators[type];
-    if (!validator) {
-      throw new Error(`No validator found for type ${type}`);
+    if (Array.isArray(validator)) {
+      return validator[0](data);
     }
     return validator(data);
+  }
+
+  public getExamples(type: string): valueExamples {
+    if (!(type in this.validators)) {
+      throw new ArgumentValidError(
+        `No validator found for type ${type}`,
+      );
+    }
+    const validator = this.validators[type];
+    if (Array.isArray(validator)) {
+      return validator[1];
+    }
+    throw new Error(
+      `Validator for type ${type} doesn't have examples`,
+    );
   }
 }

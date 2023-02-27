@@ -3,7 +3,7 @@ import {
   assertThrows,
 } from 'https://deno.land/std@0.177.0/testing/asserts.ts';
 import { CLICommandBuilder, handlerArgs } from '../src/command.ts';
-import { CLI } from '../src/simpleMatey.ts';
+import { CLI } from '../src/cli.ts';
 import { defaultValidator } from '../examples/myValidators.ts';
 import { DefaultCommandArgument } from '../src/command.ts';
 

@@ -4,7 +4,7 @@ export type handlerArgs = Record<string, string | boolean>;
 export interface CommandArgument {
   name: string;
   prefixName?: string; // - or --
-  type?: string;
+  type: string;
   description: string;
   required?: boolean;
 }
