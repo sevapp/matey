@@ -146,4 +146,6 @@ export class CLI {
       }
     }
   }
+
+  //   public execute(args: string[]) {
 }

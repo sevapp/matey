@@ -55,26 +55,25 @@ const emailCmd = new CLICommandBuilder()
   .addSubcommand(sendCmd)
   .addSubcommand(listCmd)
   .setHandler(() => {
-    // this.help()
   }).build();
 
 cli.addCommand(emailCmd);
 
-Deno.test('Stable work required args have no prefix', () => {
+Deno.test('[Stable work] required args have no prefix', () => {
   assertEquals(
     cli.parse(['email', 'send', 'a@mail.ru', 'Hello']),
     { 'to': 'a@mail.ru', 'msg': 'Hello' },
   );
 });
 
-Deno.test('Stable work only one required of two args has prefix', () => {
+Deno.test('[Stable work] only one required of two args has prefix', () => {
   assertEquals(
     cli.parse(['email', 'send', '--to', 'a@mail.ru', 'Hello']),
     { 'to': 'a@mail.ru', 'msg': 'Hello' },
   );
 });
 
-Deno.test('Stable work all requierd args have prefix', () => {
+Deno.test('[Stable work] all requierd args have prefix', () => {
   assertEquals(
     cli.parse([
       'email',
@@ -88,19 +87,19 @@ Deno.test('Stable work all requierd args have prefix', () => {
   );
 });
 
-Deno.test('Missing argument ', () => {
+Deno.test('[Catch error] caMissing argument ', () => {
   assertThrows(() => {
     cli.parse(['email', 'send', 'Hello']);
   }, Errors.MissingArgumentError);
 });
 
-Deno.test('No arguments, but command have required ', () => {
+Deno.test('[Catch error] No arguments, but command have required ', () => {
   assertThrows(() => {
     cli.parse(['email', 'send']);
   }, Errors.MissingArgumentError);
 });
 
-Deno.test('Stable work with flag', () => {
+Deno.test('[Stable work] with flag', () => {
   assertEquals(
     cli.parse([
       'email',
@@ -114,13 +113,13 @@ Deno.test('Stable work with flag', () => {
   );
 });
 
-Deno.test('No command ', () => {
+Deno.test('[Catch error] No command ', () => {
   assertThrows(() => {
     cli.parse(['send']);
   }, Errors.NoCommandError);
 });
 
-Deno.test('Invalid validation ', () => {
+Deno.test('[Catch error] Invalid validation ', () => {
   assertThrows(() => {
     cli.parse([
       'email',
@@ -131,4 +130,18 @@ Deno.test('Invalid validation ', () => {
       '--noResponse',
     ]);
   }, Errors.ArgumentValidError);
+});
+
+Deno.test('[Catch error] Extra arguments error handling', () => {
+  assertThrows(() => {
+    cli.parse([
+      'email',
+      'send',
+      '--to',
+      'a@mail.ru',
+      'Hello',
+      '--noResponse',
+      'extra',
+    ]);
+  }, Errors.ExtraArgumentError);
 });

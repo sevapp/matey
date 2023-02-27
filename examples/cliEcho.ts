@@ -279,9 +279,10 @@ const args = [
   'email',
   'send',
   '--to',
-  'amail.ru',
+  'a@mail.ru',
   'Hello',
   '--noResponse',
+  'extra',
 ];
 try {
   console.log(cli.parse(args));
