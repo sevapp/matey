@@ -36,7 +36,7 @@ const sendCmd = new CLICommandBuilder()
     type: 'flag',
     required: false,
   })
-  .setHandler((args: handlerArgs) => {
+  .setHandler(async (args: handlerArgs) => {
     args
       ? console.log(
         `Sent ${args.msg} to ${args.to} ${
@@ -44,6 +44,7 @@ const sendCmd = new CLICommandBuilder()
         }`,
       )
       : console.log('Oops');
+    await new Promise((resolve) => setTimeout(resolve, 1000));
   }).build();
 
 const listCmd = new CLICommandBuilder()
@@ -54,7 +55,7 @@ const listCmd = new CLICommandBuilder()
     name: 'from',
     description: 'Email from',
   })
-  .setHandler((args: handlerArgs) => {
+  .setHandler(async (args: handlerArgs) => {
     args
       ? console.log(`Listed emails from ${args.from}`)
       : console.log('Oops');
@@ -66,6 +67,7 @@ const emailCmd = new CLICommandBuilder()
   .addSubcommand(sendCmd)
   .addSubcommand(listCmd)
   .setHandler(() => {
+    cli.parse('help email');
   }).build();
 
 cli.addCommand(emailCmd);
@@ -82,7 +84,8 @@ cli.addCommand(emailCmd);
 // const args = ['email', 'hhh', 'a@mail.ru', 'Hello'];
 // const args = ['send', 'send', 'a@mail.ru', 'Hello'];
 // const args = [];
-const args = ['email', 'help'];
+// const args = 'email send --noResponse --to a@fef.com --msg "Hello"';
+const args = 'email send --noResponse --to eff@fe.com --msg "Hello"';
 
 try {
   // console.log(cli.splitSource(args));

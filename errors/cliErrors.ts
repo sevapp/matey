@@ -28,7 +28,7 @@ export class EmptySourceError extends Error {
 
 export class MissingValueError extends Error {
   constructor(option: { name: string }) {
-    super(`Option ${option.name} requires a value`);
+    super(`Option <${option.name}> requires a value`);
     this.name = 'MissingValueError';
   }
 }
@@ -41,8 +41,8 @@ export class MissingRequiedArgsError extends Error {
   ) {
     super(
       `Expected ${requiredArgs.length} arguments <${
-        parentCmd.arguments.map((arg) => arg.name).join(',')
-      }>, received ${requiredArgsCount} only.`,
+        requiredArgs.map((arg) => arg.name).join(',')
+      }> for command <${parentCmd.name}>, received ${requiredArgsCount} only.`,
     );
     this.name = 'MissingValueError';
   }

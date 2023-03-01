@@ -65,6 +65,13 @@ export class CLICommandBuilder {
     return this;
   }
 
+  // setAsyncHandler(
+  //   handler: (args: handlerArgs) => Promise<void>,
+  // ): CLICommandBuilder {
+  //   this.handler = handler;
+  //   return this;
+  // }
+
   build(): CLICommand {
     if (!this.name) {
       throw new Error('Command name is required');

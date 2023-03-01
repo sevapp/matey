@@ -21,7 +21,7 @@ export class CLI {
     this.cmdService = new CMDService();
     this.cmdService.addSpecCommand(
       'help',
-      (specCmd: string, argCmd: CLICommand) => {
+      (_specCmd: string, argCmd: CLICommand) => {
         console.log(`${argCmd.name} - ${argCmd.description}`);
       },
     );
@@ -182,8 +182,13 @@ export class CLI {
   }
 
   public parse(
-    rawSource: string[],
+    s: string,
   ): void {
+    const regex = /[^\s"']+|"([^"]*)"|'([^']*)'/g;
+    const rawSource = s.match(regex);
+    if (rawSource === null) {
+      throw new cliErrors.EmptySourceError();
+    }
     const { commandChain, rawArgs, specCommand } = this.splitSource(
       rawSource,
     );
