@@ -6,12 +6,6 @@ type specCommandHandler = (
   option?: 'description' | 'arguments' | 'subcommands' | 'all',
 ) => void;
 
-export class ExtraArgumentError extends Error {
-  constructor(parentCmd: CLICommand) {
-    super(`Command "${parentCmd.name}" does not accept arguments.`);
-    this.name = 'ExtraArgumentError';
-  }
-}
 export class CMDService {
   private specCommands: { [key: string]: specCommandHandler } = {};
   public addSpecCommand(name: string, handler: specCommandHandler) {

@@ -7,7 +7,7 @@ import { CLI } from '../src/cli.ts';
 import { defaultValidator } from '../examples/myValidators.ts';
 import { DefaultCommandArgument } from '../src/command.ts';
 
-import * as Errors from '../src/errors.ts';
+import * as cliErrors from '../errors/cliErrors.ts';
 const cli = new CLI(defaultValidator);
 const sendCmd = new CLICommandBuilder()
   .setName('send')
@@ -90,13 +90,13 @@ Deno.test('[Stable work] all requierd args have prefix', () => {
 Deno.test('[Catch error] caMissing argument ', () => {
   assertThrows(() => {
     cli.parse(['email', 'send', 'Hello']);
-  }, Errors.MissingArgumentError);
+  }, cliErrors.MissingArgumentError);
 });
 
 Deno.test('[Catch error] No arguments, but command have required ', () => {
   assertThrows(() => {
     cli.parse(['email', 'send']);
-  }, Errors.MissingArgumentError);
+  }, cliErrors.MissingArgumentError);
 });
 
 Deno.test('[Stable work] with flag', () => {
@@ -116,7 +116,7 @@ Deno.test('[Stable work] with flag', () => {
 Deno.test('[Catch error] No command ', () => {
   assertThrows(() => {
     cli.parse(['send']);
-  }, Errors.NoCommandError);
+  }, cliErrors.NoCommandError);
 });
 
 Deno.test('[Catch error] Invalid validation ', () => {
@@ -129,7 +129,7 @@ Deno.test('[Catch error] Invalid validation ', () => {
       'Hello',
       '--noResponse',
     ]);
-  }, Errors.ArgumentValidError);
+  }, cliErrors.ArgumentValidError);
 });
 
 Deno.test('[Catch error] Extra arguments error handling', () => {
@@ -143,5 +143,5 @@ Deno.test('[Catch error] Extra arguments error handling', () => {
       '--noResponse',
       'extra',
     ]);
-  }, Errors.ExtraArgumentError);
+  }, cliErrors.ExtraOptionalArgumentError);
 });

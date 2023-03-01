@@ -1,13 +1,8 @@
+import { NoValidatorError } from '../errors/validationErrors.ts';
+
 type ValidationFunction = (data: string) => boolean;
 export type valueExamples = string[];
-import { ArgumentValidError } from '../src/errors.ts';
 
-export class NoValidatorError extends Error {
-  constructor(type: string) {
-    super(`No validator found for type ${type}`);
-    this.name = 'ExtraArgumentError';
-  }
-}
 export class Validator {
   private validators: {
     [key: string]: ValidationFunction | [

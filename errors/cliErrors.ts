@@ -1,5 +1,5 @@
 import { valueExamples } from '../helpers/validator.ts';
-import { CLICommand } from './command.ts';
+import { CLICommand } from '../src/command.ts';
 
 export class MissingArgumentError extends Error {
   constructor(parentCmd: CLICommand) {
@@ -15,6 +15,13 @@ export class MissingArgumentError extends Error {
 export class NoCommandError extends Error {
   constructor(cmd: string) {
     super(`Command "${cmd}" not found.`);
+    this.name = 'NoCommandError';
+  }
+}
+
+export class EmptySourceError extends Error {
+  constructor() {
+    super(`Empty source.`);
     this.name = 'NoCommandError';
   }
 }
@@ -51,7 +58,7 @@ export class UnknownOptionError extends Error {
 export class ExtraOptionalArgumentError extends Error {
   constructor(term: string) {
     super(`Unknown optional argument ${term} without prefix`);
-    this.name = 'ExtraArgumentError';
+    this.name = 'ExtraOptionalArgumentError';
   }
 }
 

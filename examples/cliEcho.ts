@@ -37,7 +37,13 @@ const sendCmd = new CLICommandBuilder()
     required: false,
   })
   .setHandler((args: handlerArgs) => {
-    console.log(`Sent ${args.msg} to ${args.to}`);
+    args
+      ? console.log(
+        `Sent ${args.msg} to ${args.to} ${
+          args.noResponse ? 'without response' : ''
+        }`,
+      )
+      : console.log('Oops');
   }).build();
 
 const listCmd = new CLICommandBuilder()
@@ -49,7 +55,9 @@ const listCmd = new CLICommandBuilder()
     description: 'Email from',
   })
   .setHandler((args: handlerArgs) => {
-    console.log(`Listed emails from ${args.from}`);
+    args
+      ? console.log(`Listed emails from ${args.from}`)
+      : console.log('Oops');
   }).build();
 
 const emailCmd = new CLICommandBuilder()
@@ -61,10 +69,24 @@ const emailCmd = new CLICommandBuilder()
   }).build();
 
 cli.addCommand(emailCmd);
-const args = ['help', 'email', 'send', 'a@mail.ru', 'Hello'];
+// const args = [
+//   'email',
+//   'send',
+//   '--noResponse',
+//   '--to',
+//   'a@mail.ru',
+//   '--msg',
+//   'Hello',
+// ];
+// const args = ['help', 'help'];
+// const args = ['email', 'hhh', 'a@mail.ru', 'Hello'];
+// const args = ['send', 'send', 'a@mail.ru', 'Hello'];
+// const args = [];
+const args = ['email', 'help'];
 
 try {
-  console.log(cli.parse(args));
+  // console.log(cli.splitSource(args));
+  cli.parse(args);
   // cli.cmdService.handleSpecCommand('help', sendCmd);
 } catch (e) {
   console.log((e as Error).message);

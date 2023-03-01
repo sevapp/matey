@@ -1,6 +1,6 @@
 // import { v1 } from 'https://deno.land/std@0.177.0/uuid/mod.ts';
 // const { generate } = v1;
-export type handlerArgs = Record<string, string | boolean>;
+export type handlerArgs = Record<string, string | boolean> | null;
 export interface CommandArgument {
   name: string;
   prefixName?: string; // - or --

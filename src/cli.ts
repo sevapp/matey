@@ -6,7 +6,14 @@ import {
   handlerArgs,
 } from './command.ts';
 import { CMDService } from './commandService.ts';
-import * as Errors from './errors.ts';
+import * as cliErrors from '../errors/cliErrors.ts';
+import { tooManySpecError } from '../errors/cmdServiceErrors.ts';
+
+interface IsplitSource {
+  commandChain: CLICommand[];
+  rawArgs: string[];
+  specCommand?: string;
+}
 
 export class CLI {
   constructor(validator: Validator) {
@@ -15,7 +22,6 @@ export class CLI {
     this.cmdService.addSpecCommand(
       'help',
       (specCmd: string, argCmd: CLICommand) => {
-        console.log(`${specCmd}`);
         console.log(`${argCmd.name} - ${argCmd.description}`);
       },
     );
@@ -37,138 +43,159 @@ export class CLI {
     this.commands.push(command);
   }
 
-  /**
-   * Parse array of arguments and return object with parsed arguments
-   * @param {string[]} args
-   * @param {CLICommand | null} parentCmd
-   * @returns {handlerArgs} Object with parsed arguments
-   * or throw error if command not found or arguments are invalid
-   */
-  public parse(
-    args: string[],
-    parentCmd: CLICommand | null = null,
-  ): handlerArgs {
-    const specCmd = args.find((term) => {
+  private isChildCommand(
+    parentCmd: CLICommand | null,
+    childCmd: CLICommand | undefined,
+  ) {
+    if (childCmd === undefined) return false;
+    if (!parentCmd) {
+      return this.commands.some((key) => key.name === childCmd.name);
+    }
+
+    return parentCmd.subcommands.some((key) =>
+      key.name === childCmd.name
+    );
+  }
+
+  public splitSource(rawSource: string[]): IsplitSource {
+    if (rawSource.length === 0) {
+      throw new cliErrors.EmptySourceError();
+    }
+    const specCommands: string[] = [];
+    const specCmds = rawSource.filter((term) => {
       return this.cmdService.checkSpecCommand(term);
     });
-    args = specCmd
-      ? args.filter((term) => {
-        term !== specCmd;
-      })
-      : args;
-    if (!parentCmd) {
-      const [cmd, ...rest] = args;
-      const command = this.commands.find((key) => key.name === cmd);
-      if (!command) {
-        throw new Errors.NoCommandError(cmd);
-      }
-      return this.parse(rest, command);
-    } else {
-      const [subCmd, ...rest] = args;
-      const subcommand = parentCmd.subcommands.find(
-        (key) => key.name === subCmd,
-      );
-      if (subcommand) {
-        return this.parse(rest, subcommand);
-      } else {
-        const allRest = [subCmd, ...rest];
+    const specCmd = specCmds[0];
+    if (specCmds.length > 1) {
+      throw new tooManySpecError(specCmds);
+    }
+    if (specCmd) {
+      specCommands.push(specCmd);
+    }
+    const source = rawSource.filter((term) => term !== specCmd);
+    const commandChain: CLICommand[] = [];
+    const rawArgs: string[] = [];
+    let parent: CLICommand | null = null;
+    let term = this.commands.find((c) => c.name === source[0]);
+    if (term === undefined) {
+      throw new cliErrors.NoCommandError(source[0]);
+    }
+    let i = 0;
+    while (
+      i < source.length &&
+      this.isChildCommand(parent, term)
+    ) {
+      commandChain.push(term as CLICommand);
+      parent = term as CLICommand;
+      i++;
+      term = commandChain[commandChain.length - 1].subcommands.find((
+        c,
+      ) => c.name === source[i]);
+    }
+    rawArgs.push(...source.slice(i));
+    return {
+      commandChain,
+      rawArgs,
+      specCommand: specCommands[0],
+    };
+  }
 
-        if (specCmd) {
-          this.cmdService.handleSpecCommand(specCmd, parentCmd);
-          return {};
+  public parseArgs(
+    parentCmd: CLICommand,
+    rawArgs: string[],
+  ): handlerArgs {
+    if (parentCmd.arguments?.length === 0) return null;
+    const parsedArgs: handlerArgs = {};
+    const requiredArgs = parentCmd.arguments
+      .filter((arg) => arg.required);
+    let index = 0;
+    let requiredArgsCount = 0;
+    while (index < rawArgs.length) {
+      const term = rawArgs[index];
+      const isTermOption = term.startsWith('--') ||
+        term.startsWith('-');
+      if (isTermOption) {
+        const option = parentCmd.arguments.find((arg) =>
+          arg.prefixName === term
+        );
+        if (option === undefined) {
+          throw new cliErrors.UnknownOptionError(term);
         }
-        if (
-          allRest.length < parentCmd.arguments.filter((arg) => {
-            return arg.required;
-          }).length
-        ) {
-          throw new Errors.MissingArgumentError(parentCmd);
-        }
-        if (parentCmd.arguments?.length) {
-          const parsedArgs: handlerArgs = {};
-          const requiredArgs = parentCmd.arguments.filter((arg) =>
-            arg.required
-          );
-          let index = 0;
-          let requiredArgsCount = 0;
-          while (index < allRest.length) {
-            const term = allRest[index];
-            const isTermOption = term.startsWith('--') ||
-              term.startsWith('-');
-            if (isTermOption) {
-              const option = parentCmd.arguments.find((arg) =>
-                arg.prefixName === term
-              );
-              if (option) {
-                if (option.type === 'flag') {
-                  parsedArgs[option.name] = true;
-                  index++;
-                } else {
-                  if (option.required) requiredArgsCount++;
-                  const value = allRest[index + 1];
-                  if (value) {
-                    const isValid = this.validator.validate(
-                      option.type,
-                      value,
-                    );
-                    if (!isValid) {
-                      const validResult = this.validator.getExamples(
-                        option.type,
-                      );
-                      throw new Errors.ArgumentValidError(
-                        value,
-                        option,
-                        validResult,
-                      );
-                    }
-                    parsedArgs[option.name] = value;
-                    index += 2;
-                  } else {
-                    throw new Errors.MissingValueError(option);
-                  }
-                }
-              } else {
-                throw new Errors.UnknownOptionError(term);
-              }
-            } else {
-              if (requiredArgsCount === requiredArgs.length) {
-                throw new Errors.ExtraOptionalArgumentError(term);
-              }
-              const isValid = this.validator.validate(
-                requiredArgs[requiredArgsCount].type,
-                term,
-              );
-              if (!isValid) {
-                const validResult = this.validator.getExamples(
-                  requiredArgs[requiredArgsCount].type,
-                );
-                throw new Errors.ArgumentValidError(
-                  term,
-                  requiredArgs[requiredArgsCount],
-                  validResult,
-                );
-              }
-              parsedArgs[requiredArgs[requiredArgsCount].name] = term;
-              index++;
-              requiredArgsCount++;
-            }
+        if (option.type === 'flag') {
+          parsedArgs[option.name] = true;
+          index++;
+        } else {
+          if (option.required) requiredArgsCount++;
+          const value = rawArgs[index + 1];
+          if (value === undefined) {
+            throw new cliErrors.MissingValueError(option);
           }
-          if (requiredArgsCount < requiredArgs.length) {
-            throw new Errors.MissingRequiedArgsError(
-              requiredArgs,
-              parentCmd,
-              requiredArgsCount,
+
+          const isValid = this.validator.validate(
+            option.type,
+            value,
+          );
+          if (!isValid) {
+            const validResult = this.validator.getExamples(
+              option.type,
+            );
+            throw new cliErrors.ArgumentValidError(
+              value,
+              option,
+              validResult,
             );
           }
-          return parsedArgs;
+          parsedArgs[option.name] = value;
+          index += 2;
         }
-        if (rest.length > 0) {
-          throw new Errors.ExtraArgumentError(
-            parentCmd,
+      } else {
+        if (requiredArgsCount === requiredArgs.length) {
+          throw new cliErrors.ExtraOptionalArgumentError(term);
+        }
+        const isValid = this.validator.validate(
+          requiredArgs[requiredArgsCount].type,
+          term,
+        );
+        if (!isValid) {
+          const validResult = this.validator.getExamples(
+            requiredArgs[requiredArgsCount].type,
+          );
+          throw new cliErrors.ArgumentValidError(
+            term,
+            requiredArgs[requiredArgsCount],
+            validResult,
           );
         }
-        return {};
+        parsedArgs[requiredArgs[requiredArgsCount].name] = term;
+        index++;
+        requiredArgsCount++;
       }
     }
+    if (requiredArgsCount < requiredArgs.length) {
+      throw new cliErrors.MissingRequiedArgsError(
+        requiredArgs,
+        parentCmd,
+        requiredArgsCount,
+      );
+    }
+    return parsedArgs;
+  }
+
+  public parse(
+    rawSource: string[],
+  ): void {
+    const { commandChain, rawArgs, specCommand } = this.splitSource(
+      rawSource,
+    );
+    if (specCommand !== undefined) {
+      this.cmdService.handleSpecCommand(
+        specCommand,
+        commandChain[commandChain.length - 1],
+      );
+      return;
+    }
+    const parentCmd = commandChain[commandChain.length - 1];
+    const parsedArgs = this.parseArgs(parentCmd, rawArgs);
+    parentCmd.handler(parsedArgs);
   }
 }
