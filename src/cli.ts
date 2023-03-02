@@ -1,31 +1,31 @@
 import { Validator } from './helpers/Validator.ts';
-import { CLICommand, HandlerArgs } from './command.ts';
-import defaultCMDService, { CMDService } from './commandService.ts';
+import { HandlerArgs, ICliCommand } from './command.ts';
+import defaultCmdService, { CmdService } from './commandService.ts';
 import * as cliErrors from './errors/cliErrors.ts';
 import { TooManySpecError } from './errors/cmdServiceErrors.ts';
 import defaultValidator from './helpers/standartValidators.ts';
 
 interface IsplitSource {
-  commandChain: CLICommand[];
+  commandChain: ICliCommand[];
   rawArgs: string[];
   specCommand?: string;
 }
 
-export class CLI {
+export class Cli {
   private validator: Validator;
-  public cmdService: CMDService;
-  private commands: CLICommand[] = [];
+  public cmdService: CmdService;
+  private commands: ICliCommand[] = [];
 
-  constructor(validator?: Validator, cmdService?: CMDService) {
+  constructor(validator?: Validator, cmdService?: CmdService) {
     this.validator = validator ? validator : defaultValidator;
-    this.cmdService = cmdService ? cmdService : defaultCMDService;
+    this.cmdService = cmdService ? cmdService : defaultCmdService;
   }
 
   public setValidator(validator: Validator) {
     this.validator = validator;
   }
 
-  public addCommand(command: CLICommand) {
+  public addCommand(command: ICliCommand) {
     if (this.commands.some((key) => key.name === command.name)) {
       throw new Error(`Command "${command.name}" already exists.`);
     }
@@ -34,8 +34,8 @@ export class CLI {
   }
 
   private isChildCommand(
-    parentCmd: CLICommand | null,
-    childCmd: CLICommand | undefined,
+    parentCmd: ICliCommand | null,
+    childCmd: ICliCommand | undefined,
   ) {
     if (childCmd === undefined) return false;
     if (!parentCmd) {
@@ -63,9 +63,9 @@ export class CLI {
       specCommands.push(specCmd);
     }
     const source = rawSource.filter((term) => term !== specCmd);
-    const commandChain: CLICommand[] = [];
+    const commandChain: ICliCommand[] = [];
     const rawArgs: string[] = [];
-    let parent: CLICommand | null = null;
+    let parent: ICliCommand | null = null;
     let term = this.commands.find((c) => c.name === source[0]);
     if (term === undefined) {
       throw new cliErrors.NoCommandError(source[0]);
@@ -75,8 +75,8 @@ export class CLI {
       i < source.length &&
       this.isChildCommand(parent, term)
     ) {
-      commandChain.push(term as CLICommand);
-      parent = term as CLICommand;
+      commandChain.push(term as ICliCommand);
+      parent = term as ICliCommand;
       i++;
       term = commandChain[commandChain.length - 1].subcommands.find((
         c,
@@ -91,7 +91,7 @@ export class CLI {
   }
 
   public parseArgs(
-    parentCmd: CLICommand,
+    parentCmd: ICliCommand,
     rawArgs: string[],
   ): HandlerArgs {
     if (parentCmd.arguments?.length === 0) return null;

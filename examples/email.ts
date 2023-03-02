@@ -1,10 +1,10 @@
-import { CLICommandBuilder, HandlerArgs } from '../src/command.ts';
-import { CLI } from '../src/cli.ts';
+import { CliCommandBuilder, HandlerArgs } from '../src/command.ts';
+import { Cli } from '../src/cli.ts';
 import { DefaultCommandArgument } from '../src/command.ts';
 
 const mail: Record<string, string[]> = {};
-const cli = new CLI();
-const sendCmd = new CLICommandBuilder()
+const cli = new Cli();
+const sendCmd = new CliCommandBuilder()
   .setName('send')
   .setDescription('Send @msg to @to')
   .addArgument({
@@ -48,7 +48,7 @@ const sendCmd = new CLICommandBuilder()
     }
   }).build();
 
-const listCmd = new CLICommandBuilder()
+const listCmd = new CliCommandBuilder()
   .setName('list')
   .setDescription('List emails')
   .addArgument({
@@ -71,7 +71,7 @@ const listCmd = new CLICommandBuilder()
     }
   }).build();
 
-const emailCmd = new CLICommandBuilder()
+const emailCmd = new CliCommandBuilder()
   .setName('email')
   .setDescription('Email commands')
   .addSubcommand(sendCmd)

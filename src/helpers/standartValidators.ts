@@ -12,6 +12,7 @@ defaultValidator.addValidator(
   (data: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data),
   ['person@domain.com', 'deno@deno.com'],
 );
+
 defaultValidator.addValidator('filename', (data: string) => {
   const filenameRegex = /^[a-zA-Z0-9-_\\/]+\.[a-zA-Z0-9]+$/;
   return filenameRegex.test(data);
@@ -48,7 +49,7 @@ defaultValidator.addValidator(
 
 defaultValidator.addValidator('data', () => {
   return true;
-}, ['2022-03-01', '2022-03-02']);
+}, ['Any type of data']);
 
 defaultValidator.addValidator(
   'phone',

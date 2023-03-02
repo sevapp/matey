@@ -4,7 +4,6 @@ import {
   NoCommandPrefix,
 } from './errors/cmdErrors.ts';
 
-// const { generate } = v1;
 export type HandlerArgs = Record<string, string | boolean> | null;
 export interface CommandArgument {
   name: string;
@@ -23,52 +22,53 @@ export const DefaultCommandArgument: Pick<
   prefixName: '',
 };
 
-export interface CLICommand {
+export interface ICliCommand {
   name: string;
   description: string;
   arguments: CommandArgument[];
-  subcommands: CLICommand[];
+  subcommands: ICliCommand[];
   handler: (args: HandlerArgs) => void;
 }
 
-export class CLICommandBuilder {
+export class CliCommandBuilder {
   private name = '';
   private description = '';
   private arguments: CommandArgument[] = [];
-  private subcommands: CLICommand[] = [];
+  private subcommands: ICliCommand[] = [];
   private handler?: (args: HandlerArgs) => void;
 
-  setName(name: string): CLICommandBuilder {
+  setName(name: string): CliCommandBuilder {
     this.name = name;
     return this;
   }
 
-  setDescription(description: string): CLICommandBuilder {
+  setDescription(description: string): CliCommandBuilder {
     this.description = description;
     return this;
   }
 
-  addArgument(argument: CommandArgument): CLICommandBuilder {
+  addArgument(argument: CommandArgument): CliCommandBuilder {
     if (!argument.required && !argument.prefixName) {
       throw new NoCommandPrefix();
     }
+
     this.arguments.push(argument);
     return this;
   }
 
-  addSubcommand(subcommand: CLICommand): CLICommandBuilder {
+  addSubcommand(subcommand: ICliCommand): CliCommandBuilder {
     this.subcommands.push(subcommand);
     return this;
   }
 
   setHandler(
     handler: (args: HandlerArgs) => void,
-  ): CLICommandBuilder {
+  ): CliCommandBuilder {
     this.handler = handler;
     return this;
   }
 
-  build(): CLICommand {
+  build(): ICliCommand {
     if (!this.name) {
       throw new NoCommandName();
     }

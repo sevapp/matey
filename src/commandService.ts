@@ -1,12 +1,12 @@
-import { CLICommand } from './command.ts';
+import { ICliCommand } from './command.ts';
 
 type SpecCommandHandler = (
   specCmd: string,
-  argCmd: CLICommand,
+  argCmd: ICliCommand,
   option?: 'description' | 'arguments' | 'subcommands' | 'all',
 ) => void;
 
-export class CMDService {
+export class CmdService {
   private specCommands: { [key: string]: SpecCommandHandler } = {};
   public addSpecCommand(name: string, handler: SpecCommandHandler) {
     this.specCommands[name] = handler;
@@ -14,24 +14,25 @@ export class CMDService {
 
   public handleSpecCommand(
     specCmdName: string,
-    argCmd: CLICommand,
+    argCmd: ICliCommand,
     option?: 'description' | 'arguments' | 'subcommands' | 'all',
   ) {
-    if (specCmdName in this.specCommands) {
-      this.specCommands[specCmdName](specCmdName, argCmd, option);
-    } else {
+    if (!(specCmdName in this.specCommands)) {
       throw new Error(`Spec command "${specCmdName}" not found.`);
     }
+
+    this.specCommands[specCmdName](specCmdName, argCmd, option);
   }
+
   public checkSpecCommand(specCmdName: string) {
     return specCmdName in this.specCommands;
   }
 }
 
-const defaultCMDService = new CMDService();
-defaultCMDService.addSpecCommand(
+const defaultCmdervice = new CmdService();
+defaultCmdervice.addSpecCommand(
   'help',
-  (_specCmd: string, argCmd: CLICommand) => {
+  (_specCmd: string, argCmd: ICliCommand) => {
     console.log(
       `Command: ${argCmd.name}\nDescription: ${argCmd.description}\nArguments: ${
         argCmd.arguments
@@ -45,4 +46,4 @@ defaultCMDService.addSpecCommand(
   },
 );
 
-export default defaultCMDService;
+export default defaultCmdervice;

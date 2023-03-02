@@ -30,10 +30,12 @@ export class Validator {
         `No validator found for type ${type}`,
       );
     }
+
     const validator = this.validators[type];
     if (Array.isArray(validator)) {
       return validator[0](data);
     }
+
     return validator(data);
   }
 
@@ -41,6 +43,7 @@ export class Validator {
     if (!(type in this.validators)) {
       throw new NoValidatorError(type);
     }
+
     const validator = this.validators[type];
     if (Array.isArray(validator)) {
       return validator[1];
