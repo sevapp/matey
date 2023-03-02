@@ -1,8 +1,8 @@
-import { ValueExamples } from '../helpers/validator.ts';
-import { CLICommand } from '../command.ts';
+import { ValueExamples } from '../helpers/Validator.ts';
+import { ICliCommand } from '../command.ts';
 
 export class MissingArgumentError extends Error {
-  constructor(parentCmd: CLICommand) {
+  constructor(parentCmd: ICliCommand) {
     super(
       `Expected ${parentCmd.arguments.length} arguments <${
         parentCmd.arguments.map((arg) => arg.name).join(',')
@@ -36,7 +36,7 @@ export class MissingValueError extends Error {
 export class MissingRequiredArgsError extends Error {
   constructor(
     requiredArgs: { name: string }[],
-    parentCmd: CLICommand,
+    parentCmd: ICliCommand,
     requiredArgsCount: number,
   ) {
     super(
@@ -63,7 +63,7 @@ export class ExtraOptionalArgumentError extends Error {
 }
 
 export class ExtraArgumentError extends Error {
-  constructor(parentCmd: CLICommand) {
+  constructor(parentCmd: ICliCommand) {
     super(`Command "${parentCmd.name}" does not accept arguments.`);
     this.name = 'ExtraArgumentError';
   }

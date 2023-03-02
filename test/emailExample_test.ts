@@ -2,14 +2,13 @@ import {
   assertEquals,
   assertThrows,
 } from 'https://deno.land/std@0.177.0/testing/asserts.ts';
-import { CLICommandBuilder } from '../src/command.ts';
-import { CLI } from '../src/cli.ts';
-import defaultValidator from '../src/helpers/standartValidators.ts';
+import { CliCommandBuilder } from '../src/command.ts';
+import { Cli } from '../src/cli.ts';
 import { DefaultCommandArgument } from '../src/command.ts';
 
 import * as cliErrors from '../src/errors/cliErrors.ts';
-const cli = new CLI(defaultValidator);
-const sendCmd = new CLICommandBuilder()
+const cli = new Cli();
+const sendCmd = new CliCommandBuilder()
   .setName('send')
   .setDescription('Send @msg to @to')
   .addArgument({
@@ -36,7 +35,7 @@ const sendCmd = new CLICommandBuilder()
   .setHandler(() => {
   }).build();
 
-const listCmd = new CLICommandBuilder()
+const listCmd = new CliCommandBuilder()
   .setName('list')
   .setDescription('List emails')
   .addArgument({
@@ -47,7 +46,7 @@ const listCmd = new CLICommandBuilder()
   .setHandler(() => {
   }).build();
 
-const emailCmd = new CLICommandBuilder()
+const emailCmd = new CliCommandBuilder()
   .setName('email')
   .setDescription('Email commands')
   .addSubcommand(sendCmd)

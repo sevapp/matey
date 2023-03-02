@@ -1,9 +1,11 @@
-import { CliCommandBuilder, HandlerArgs } from '../src/command.ts';
-import { Cli } from '../src/cli.ts';
-import { DefaultCommandArgument } from '../src/command.ts';
+import {
+  Cli,
+  CliCommandBuilder,
+  DefaultCommandArgument,
+} from '../mod.ts';
 
 const mail: Record<string, string[]> = {};
-const cli = new Cli();
+
 const sendCmd = new CliCommandBuilder()
   .setName('send')
   .setDescription('Send @msg to @to')
@@ -36,7 +38,7 @@ const sendCmd = new CliCommandBuilder()
     type: 'flag',
     required: false,
   })
-  .setHandler((args: HandlerArgs) => {
+  .setHandler((args) => {
     if (args) {
       const [to, msg] = [args.to as string, args.msg as string];
       if (mail[to]) {
@@ -58,7 +60,7 @@ const listCmd = new CliCommandBuilder()
     type: 'email',
     prefixName: '--from',
   })
-  .setHandler(async (args: HandlerArgs) => {
+  .setHandler(async (args) => {
     if (args) {
       const from = args.from as string;
       if (mail[from]) {
@@ -77,12 +79,15 @@ const emailCmd = new CliCommandBuilder()
   .addSubcommand(sendCmd)
   .addSubcommand(listCmd)
   .setHandler(() => {
-    cli.parse('help email');
+    // cli.parse('help email');
   }).build();
 
-cli.addCommand(emailCmd);
-
 try {
+  const cli = new Cli();
+  cli.addCommand(emailCmd);
+  cli.addCommand(listCmd);
+  cli.addCommand(sendCmd);
+
   cli.parse('email send --to alice@domain.xyz --msg Hello');
   cli.parse('email send --to alice@domain.xyz --msg "Hello again"');
   cli.parse(
