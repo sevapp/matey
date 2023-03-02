@@ -88,7 +88,13 @@ try {
   cli.addCommand(listCmd);
   cli.addCommand(sendCmd);
 
-  cli.parse('email send --to alice@domain.xyz --msg Hello');
+  /*
+  cli.on(/ help /, (commands: string[], args: HandlerArgs) => {
+    // тут что-то делаем
+  }));
+  */
+
+  cli.parse('email send help --to alice@domain.xyz --msg Hello');
   cli.parse('email send --to alice@domain.xyz --msg "Hello again"');
   cli.parse(
     'email send --to bob@domain.xyz --msg "Good morning, Bob!"',

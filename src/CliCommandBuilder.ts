@@ -5,7 +5,7 @@ import {
 } from './errors/mod.ts';
 
 export type HandlerArgs = Record<string, string | boolean> | null;
-export interface CommandArgument {
+export interface ICommandArgument {
   name: string;
   prefixName?: string; // - or --
   type: string;
@@ -14,7 +14,7 @@ export interface CommandArgument {
 }
 
 export const DefaultCommandArgument: Pick<
-  CommandArgument,
+  ICommandArgument,
   'type' | 'required' | 'prefixName'
 > = {
   type: 'data',
@@ -25,7 +25,7 @@ export const DefaultCommandArgument: Pick<
 export interface ICliCommand {
   name: string;
   description: string;
-  arguments: CommandArgument[];
+  arguments: ICommandArgument[];
   subcommands: ICliCommand[];
   handler: (args: HandlerArgs) => void;
 }
@@ -33,7 +33,7 @@ export interface ICliCommand {
 export class CliCommandBuilder {
   private name = '';
   private description = '';
-  private arguments: CommandArgument[] = [];
+  private arguments: ICommandArgument[] = [];
   private subcommands: ICliCommand[] = [];
   private handler?: (args: HandlerArgs) => void;
 
@@ -47,7 +47,7 @@ export class CliCommandBuilder {
     return this;
   }
 
-  addArgument(argument: CommandArgument): CliCommandBuilder {
+  addArgument(argument: ICommandArgument): CliCommandBuilder {
     if (!argument.required && !argument.prefixName) {
       throw new NoCommandPrefixError();
     }
