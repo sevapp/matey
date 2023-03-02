@@ -1,5 +1,5 @@
 import { valueExamples } from '../helpers/validator.ts';
-import { CLICommand } from '../src/command.ts';
+import { CLICommand } from '../command.ts';
 
 export class MissingArgumentError extends Error {
   constructor(parentCmd: CLICommand) {

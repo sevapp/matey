@@ -2,12 +2,12 @@ import {
   assertEquals,
   assertThrows,
 } from 'https://deno.land/std@0.177.0/testing/asserts.ts';
-import { CLICommandBuilder, handlerArgs } from '../src/command.ts';
+import { CLICommandBuilder } from '../src/command.ts';
 import { CLI } from '../src/cli.ts';
-import defaultValidator from '../helpers/standartValidators.ts';
+import defaultValidator from '../src/helpers/standartValidators.ts';
 import { DefaultCommandArgument } from '../src/command.ts';
 
-import * as cliErrors from '../errors/cliErrors.ts';
+import * as cliErrors from '../src/errors/cliErrors.ts';
 const cli = new CLI(defaultValidator);
 const sendCmd = new CLICommandBuilder()
   .setName('send')

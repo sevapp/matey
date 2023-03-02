@@ -1,10 +1,8 @@
-// import { v1 } from 'https://deno.land/std@0.177.0/uuid/mod.ts';
-
 import {
   NoCommandHandler,
   NoCommandName,
   NoCommandPrefix,
-} from '../errors/cmdErrors.ts';
+} from './errors/cmdErrors.ts';
 
 // const { generate } = v1;
 export type handlerArgs = Record<string, string | boolean> | null;

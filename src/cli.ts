@@ -1,9 +1,9 @@
-import { Validator } from '../helpers/validator.ts';
+import { Validator } from './helpers/validator.ts';
 import { CLICommand, handlerArgs } from './command.ts';
 import defaultCMDService, { CMDService } from './commandService.ts';
-import * as cliErrors from '../errors/cliErrors.ts';
-import { tooManySpecError } from '../errors/cmdServiceErrors.ts';
-import defaultValidator from '../helpers/standartValidators.ts';
+import * as cliErrors from './errors/cliErrors.ts';
+import { tooManySpecError } from './errors/cmdServiceErrors.ts';
+import defaultValidator from './helpers/standartValidators.ts';
 
 interface IsplitSource {
   commandChain: CLICommand[];

@@ -1,5 +1,3 @@
-import { CLICommand, CLICommandBuilder } from '../src/command.ts';
-
 export class NoCommandName extends Error {
   constructor() {
     super('Command name is required');
