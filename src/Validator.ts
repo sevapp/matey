@@ -1,4 +1,4 @@
-import { NoValidatorError } from '../errors/validationErrors.ts';
+import { NoValidatorError } from './errors/mod.ts';
 
 type ValidationFunction = (data: string) => boolean;
 export type ValueExamples = string[];

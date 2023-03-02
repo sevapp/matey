@@ -1,4 +1,4 @@
-import { ICliCommand } from './command.ts';
+import { ICliCommand } from './CliCommandBuilder.ts';
 
 type SpecCommandHandler = (
   specCmd: string,
@@ -8,6 +8,7 @@ type SpecCommandHandler = (
 
 export class CmdService {
   private specCommands: { [key: string]: SpecCommandHandler } = {};
+
   public addSpecCommand(name: string, handler: SpecCommandHandler) {
     this.specCommands[name] = handler;
   }
@@ -29,8 +30,8 @@ export class CmdService {
   }
 }
 
-const defaultCmdervice = new CmdService();
-defaultCmdervice.addSpecCommand(
+const defaultCmdService = new CmdService();
+defaultCmdService.addSpecCommand(
   'help',
   (_specCmd: string, argCmd: ICliCommand) => {
     console.log(
@@ -46,4 +47,4 @@ defaultCmdervice.addSpecCommand(
   },
 );
 
-export default defaultCmdervice;
+export default defaultCmdService;

@@ -1,9 +1,8 @@
-import { Validator } from './helpers/Validator.ts';
-import { HandlerArgs, ICliCommand } from './command.ts';
-import defaultCmdService, { CmdService } from './commandService.ts';
-import * as cliErrors from './errors/cliErrors.ts';
-import { TooManySpecError } from './errors/cmdServiceErrors.ts';
-import defaultValidator from './helpers/standartValidators.ts';
+import { Validator } from './Validator.ts';
+import { HandlerArgs, ICliCommand } from './CliCommandBuilder.ts';
+import defaultCmdService, { CmdService } from './CmdService.ts';
+import * as errors from './errors/mod.ts';
+import defaultValidator from './defaultValidator.ts';
 
 interface IsplitSource {
   commandChain: ICliCommand[];
@@ -49,7 +48,7 @@ export class Cli {
 
   public splitSource(rawSource: string[]): IsplitSource {
     if (rawSource.length === 0) {
-      throw new cliErrors.EmptySourceError();
+      throw new errors.EmptySourceError();
     }
     const specCommands: string[] = [];
     const specCmds = rawSource.filter((term) => {
@@ -57,7 +56,7 @@ export class Cli {
     });
     const specCmd = specCmds[0];
     if (specCmds.length > 1) {
-      throw new TooManySpecError(specCmds);
+      throw new errors.TooManySpecError(specCmds);
     }
     if (specCmd) {
       specCommands.push(specCmd);
@@ -68,7 +67,7 @@ export class Cli {
     let parent: ICliCommand | null = null;
     let term = this.commands.find((c) => c.name === source[0]);
     if (term === undefined) {
-      throw new cliErrors.NoCommandError(source[0]);
+      throw new errors.NoCommandError(source[0]);
     }
     let i = 0;
     while (
@@ -109,7 +108,7 @@ export class Cli {
           arg.prefixName === term
         );
         if (option === undefined) {
-          throw new cliErrors.UnknownOptionError(term);
+          throw new errors.UnknownOptionError(term);
         }
         if (option.type === 'flag') {
           parsedArgs[option.name] = true;
@@ -118,7 +117,7 @@ export class Cli {
           if (option.required) requiredArgsCount++;
           const value = rawArgs[index + 1];
           if (value === undefined) {
-            throw new cliErrors.MissingValueError(option);
+            throw new errors.MissingValueError(option);
           }
 
           const isValid = this.validator.validate(
@@ -129,7 +128,7 @@ export class Cli {
             const validResult = this.validator.getExamples(
               option.type,
             );
-            throw new cliErrors.ArgumentValidError(
+            throw new errors.ArgumentValidError(
               value,
               option,
               validResult,
@@ -140,7 +139,7 @@ export class Cli {
         }
       } else {
         if (requiredArgsCount === requiredArgs.length) {
-          throw new cliErrors.ExtraOptionalArgumentError(term);
+          throw new errors.ExtraOptionalArgumentError(term);
         }
         const isValid = this.validator.validate(
           requiredArgs[requiredArgsCount].type,
@@ -150,7 +149,7 @@ export class Cli {
           const validResult = this.validator.getExamples(
             requiredArgs[requiredArgsCount].type,
           );
-          throw new cliErrors.ArgumentValidError(
+          throw new errors.ArgumentValidError(
             term,
             requiredArgs[requiredArgsCount],
             validResult,
@@ -162,7 +161,7 @@ export class Cli {
       }
     }
     if (requiredArgsCount < requiredArgs.length) {
-      throw new cliErrors.MissingRequiredArgsError(
+      throw new errors.MissingRequiredArgsError(
         requiredArgs,
         parentCmd,
         requiredArgsCount,
@@ -177,7 +176,7 @@ export class Cli {
     const regex = /[^\s"']+|"([^"]*)"|'([^']*)'/g;
     const rawSource = Array.isArray(s) ? s : s.match(regex);
     if (rawSource === null) {
-      throw new cliErrors.EmptySourceError();
+      throw new errors.EmptySourceError();
     }
     const { commandChain, rawArgs, specCommand } = this.splitSource(
       rawSource,

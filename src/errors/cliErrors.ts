@@ -1,5 +1,5 @@
-import { ValueExamples } from '../helpers/Validator.ts';
-import { ICliCommand } from '../command.ts';
+import { ValueExamples } from '../Validator.ts';
+import { ICliCommand } from '../CliCommandBuilder.ts';
 
 export class MissingArgumentError extends Error {
   constructor(parentCmd: ICliCommand) {

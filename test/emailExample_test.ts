@@ -2,9 +2,11 @@ import {
   assertEquals,
   assertThrows,
 } from 'https://deno.land/std@0.177.0/testing/asserts.ts';
-import { CliCommandBuilder } from '../src/command.ts';
 import { Cli } from '../src/cli.ts';
-import { DefaultCommandArgument } from '../src/command.ts';
+import {
+  CliCommandBuilder,
+  DefaultCommandArgument,
+} from '../src/CliCommandBuilder.ts';
 
 import * as cliErrors from '../src/errors/cliErrors.ts';
 const cli = new Cli();
