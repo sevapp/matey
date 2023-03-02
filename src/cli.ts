@@ -1,4 +1,4 @@
-import { Validator } from './helpers/validator.ts';
+import { Validator } from './helpers/Validator.ts';
 import { CLICommand, HandlerArgs } from './command.ts';
 import defaultCMDService, { CMDService } from './commandService.ts';
 import * as cliErrors from './errors/cliErrors.ts';
@@ -12,14 +12,14 @@ interface IsplitSource {
 }
 
 export class CLI {
+  private validator: Validator;
+  public cmdService: CMDService;
+  private commands: CLICommand[] = [];
+
   constructor(validator?: Validator, cmdService?: CMDService) {
     this.validator = validator ? validator : defaultValidator;
     this.cmdService = cmdService ? cmdService : defaultCMDService;
   }
-  private validator: Validator;
-  public cmdService: CMDService;
-
-  private commands: CLICommand[] = [];
 
   public setValidator(validator: Validator) {
     this.validator = validator;
