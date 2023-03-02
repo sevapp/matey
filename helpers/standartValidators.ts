@@ -66,4 +66,4 @@ defaultValidator.addValidator(
   ['12:00', '23:59'],
 );
 
-export { defaultValidator };
+export default defaultValidator;

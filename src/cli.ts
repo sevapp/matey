@@ -1,13 +1,9 @@
 import { Validator } from '../helpers/validator.ts';
-import {
-  CLICommand,
-  CLICommandBuilder,
-  CommandArgument,
-  handlerArgs,
-} from './command.ts';
-import { CMDService } from './commandService.ts';
+import { CLICommand, handlerArgs } from './command.ts';
+import defaultCMDService, { CMDService } from './commandService.ts';
 import * as cliErrors from '../errors/cliErrors.ts';
 import { tooManySpecError } from '../errors/cmdServiceErrors.ts';
+import defaultValidator from '../helpers/standartValidators.ts';
 
 interface IsplitSource {
   commandChain: CLICommand[];
@@ -16,15 +12,9 @@ interface IsplitSource {
 }
 
 export class CLI {
-  constructor(validator: Validator) {
-    this.validator = validator;
-    this.cmdService = new CMDService();
-    this.cmdService.addSpecCommand(
-      'help',
-      (_specCmd: string, argCmd: CLICommand) => {
-        console.log(`${argCmd.name} - ${argCmd.description}`);
-      },
-    );
+  constructor(validator?: Validator, cmdService?: CMDService) {
+    this.validator = validator ? validator : defaultValidator;
+    this.cmdService = cmdService ? cmdService : defaultCMDService;
   }
   private validator: Validator;
   public cmdService: CMDService;
@@ -172,7 +162,7 @@ export class CLI {
       }
     }
     if (requiredArgsCount < requiredArgs.length) {
-      throw new cliErrors.MissingRequiedArgsError(
+      throw new cliErrors.MissingRequiredArgsError(
         requiredArgs,
         parentCmd,
         requiredArgsCount,
@@ -182,10 +172,10 @@ export class CLI {
   }
 
   public parse(
-    s: string,
+    s: string | string[],
   ): void {
     const regex = /[^\s"']+|"([^"]*)"|'([^']*)'/g;
-    const rawSource = s.match(regex);
+    const rawSource = Array.isArray(s) ? s : s.match(regex);
     if (rawSource === null) {
       throw new cliErrors.EmptySourceError();
     }

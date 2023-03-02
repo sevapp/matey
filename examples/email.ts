@@ -1,9 +1,9 @@
 import { CLICommandBuilder, handlerArgs } from '../src/command.ts';
 import { CLI } from '../src/cli.ts';
-import { defaultValidator } from '../examples/myValidators.ts';
 import { DefaultCommandArgument } from '../src/command.ts';
 
-const cli = new CLI(defaultValidator);
+const mail: Record<string, string[]> = {};
+const cli = new CLI();
 const sendCmd = new CLICommandBuilder()
   .setName('send')
   .setDescription('Send @msg to @to')
@@ -36,15 +36,16 @@ const sendCmd = new CLICommandBuilder()
     type: 'flag',
     required: false,
   })
-  .setHandler(async (args: handlerArgs) => {
-    args
-      ? console.log(
-        `Sent ${args.msg} to ${args.to} ${
-          args.noResponse ? 'without response' : ''
-        }`,
-      )
-      : console.log('Oops');
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+  .setHandler((args: handlerArgs) => {
+    if (args) {
+      const [to, msg] = [args.to as string, args.msg as string];
+      if (mail[to]) {
+        mail[to].push(msg);
+      } else {
+        mail[to] = [msg];
+      }
+      console.log(`Sent ${msg} to ${to}`);
+    }
   }).build();
 
 const listCmd = new CLICommandBuilder()
@@ -54,11 +55,20 @@ const listCmd = new CLICommandBuilder()
     ...DefaultCommandArgument,
     name: 'from',
     description: 'Email from',
+    type: 'email',
+    prefixName: '--from',
   })
   .setHandler(async (args: handlerArgs) => {
-    args
-      ? console.log(`Listed emails from ${args.from}`)
-      : console.log('Oops');
+    if (args) {
+      const from = args.from as string;
+      if (mail[from]) {
+        console.log(
+          `${args.from} emails: \n${mail[from].join('\n')}`,
+        );
+      } else {
+        console.log('No emails');
+      }
+    }
   }).build();
 
 const emailCmd = new CLICommandBuilder()
@@ -71,26 +81,16 @@ const emailCmd = new CLICommandBuilder()
   }).build();
 
 cli.addCommand(emailCmd);
-// const args = [
-//   'email',
-//   'send',
-//   '--noResponse',
-//   '--to',
-//   'a@mail.ru',
-//   '--msg',
-//   'Hello',
-// ];
-// const args = ['help', 'help'];
-// const args = ['email', 'hhh', 'a@mail.ru', 'Hello'];
-// const args = ['send', 'send', 'a@mail.ru', 'Hello'];
-// const args = [];
-// const args = 'email send --noResponse --to a@fef.com --msg "Hello"';
-const args = 'email send --noResponse --to eff@fe.com --msg "Hello"';
 
 try {
-  // console.log(cli.splitSource(args));
-  cli.parse(args);
-  // cli.cmdService.handleSpecCommand('help', sendCmd);
+  cli.parse('email send --to alice@domain.xyz --msg Hello');
+  cli.parse('email send --to alice@domain.xyz --msg "Hello again"');
+  cli.parse(
+    'email send --to bob@domain.xyz --msg "Good morning, Bob!"',
+  );
+  cli.parse(
+    'email list alice@domain.xyz',
+  );
 } catch (e) {
   console.log((e as Error).message);
 }

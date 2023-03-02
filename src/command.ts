@@ -1,4 +1,11 @@
 // import { v1 } from 'https://deno.land/std@0.177.0/uuid/mod.ts';
+
+import {
+  NoCommandHandler,
+  NoCommandName,
+  NoCommandPrefix,
+} from '../errors/cmdErrors.ts';
+
 // const { generate } = v1;
 export type handlerArgs = Record<string, string | boolean> | null;
 export interface CommandArgument {
@@ -45,9 +52,7 @@ export class CLICommandBuilder {
 
   addArgument(argument: CommandArgument): CLICommandBuilder {
     if (!argument.required && !argument.prefixName) {
-      throw new Error(
-        'Argument must have prefixName if it is not required',
-      );
+      throw new NoCommandPrefix();
     }
     this.arguments.push(argument);
     return this;
@@ -65,20 +70,13 @@ export class CLICommandBuilder {
     return this;
   }
 
-  // setAsyncHandler(
-  //   handler: (args: handlerArgs) => Promise<void>,
-  // ): CLICommandBuilder {
-  //   this.handler = handler;
-  //   return this;
-  // }
-
   build(): CLICommand {
     if (!this.name) {
-      throw new Error('Command name is required');
+      throw new NoCommandName();
     }
 
     if (!this.handler) {
-      throw new Error('Command handler is required');
+      throw new NoCommandHandler(this.name);
     }
 
     return {

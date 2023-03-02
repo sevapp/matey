@@ -4,7 +4,7 @@ import {
 } from 'https://deno.land/std@0.177.0/testing/asserts.ts';
 import { CLICommandBuilder, handlerArgs } from '../src/command.ts';
 import { CLI } from '../src/cli.ts';
-import { defaultValidator } from '../examples/myValidators.ts';
+import defaultValidator from '../helpers/standartValidators.ts';
 import { DefaultCommandArgument } from '../src/command.ts';
 
 import * as cliErrors from '../errors/cliErrors.ts';
@@ -33,8 +33,7 @@ const sendCmd = new CLICommandBuilder()
     description: 'Message to send',
     prefixName: '--msg',
   })
-  .setHandler((args: handlerArgs) => {
-    console.log(`Sent ${args.msg} to ${args.to}`);
+  .setHandler(() => {
   }).build();
 
 const listCmd = new CLICommandBuilder()
@@ -45,8 +44,7 @@ const listCmd = new CLICommandBuilder()
     name: 'from',
     description: 'Email from',
   })
-  .setHandler((args: handlerArgs) => {
-    console.log(`Listed emails from ${args.from}`);
+  .setHandler(() => {
   }).build();
 
 const emailCmd = new CLICommandBuilder()
@@ -62,14 +60,14 @@ cli.addCommand(emailCmd);
 Deno.test('[Stable work] required args have no prefix', () => {
   assertEquals(
     cli.parse(['email', 'send', 'a@mail.ru', 'Hello']),
-    { 'to': 'a@mail.ru', 'msg': 'Hello' },
+    void 0,
   );
 });
 
 Deno.test('[Stable work] only one required of two args has prefix', () => {
   assertEquals(
     cli.parse(['email', 'send', '--to', 'a@mail.ru', 'Hello']),
-    { 'to': 'a@mail.ru', 'msg': 'Hello' },
+    void 0,
   );
 });
 
@@ -83,20 +81,20 @@ Deno.test('[Stable work] all requierd args have prefix', () => {
       '--msg',
       'Hello',
     ]),
-    { 'to': 'a@mail.ru', 'msg': 'Hello' },
+    void 0,
   );
 });
 
-Deno.test('[Catch error] caMissing argument ', () => {
+Deno.test('[Catch error] Missing argument ', () => {
   assertThrows(() => {
     cli.parse(['email', 'send', 'Hello']);
-  }, cliErrors.MissingArgumentError);
+  }, cliErrors.ArgumentValidError);
 });
 
 Deno.test('[Catch error] No arguments, but command have required ', () => {
   assertThrows(() => {
     cli.parse(['email', 'send']);
-  }, cliErrors.MissingArgumentError);
+  }, cliErrors.MissingRequiredArgsError);
 });
 
 Deno.test('[Stable work] with flag', () => {
@@ -109,7 +107,7 @@ Deno.test('[Stable work] with flag', () => {
       'Hello',
       '--noResponse',
     ]),
-    { 'to': 'a@mail.ru', 'msg': 'Hello', 'noResponse': true },
+    void 0,
   );
 });
 

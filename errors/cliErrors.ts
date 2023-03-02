@@ -33,7 +33,7 @@ export class MissingValueError extends Error {
   }
 }
 
-export class MissingRequiedArgsError extends Error {
+export class MissingRequiredArgsError extends Error {
   constructor(
     requiredArgs: { name: string }[],
     parentCmd: CLICommand,

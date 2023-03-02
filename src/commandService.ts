@@ -27,3 +27,22 @@ export class CMDService {
     return specCmdName in this.specCommands;
   }
 }
+
+const defaultCMDService = new CMDService();
+defaultCMDService.addSpecCommand(
+  'help',
+  (_specCmd: string, argCmd: CLICommand) => {
+    console.log(
+      `Command: ${argCmd.name}\nDescription: ${argCmd.description}\nArguments: ${
+        argCmd.arguments
+          .map((arg) => arg.name)
+          .join(', ') || 'No arguments'
+      }\nSubcommands: ${
+        argCmd.subcommands.map((sub) => sub.name).join(', ') ||
+        'No subcommands'
+      }`,
+    );
+  },
+);
+
+export default defaultCMDService;
