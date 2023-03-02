@@ -1,1 +1,3 @@
-# matey
+# Matey
+
+command line interface library
