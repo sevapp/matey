@@ -1,14 +1,14 @@
 import { CLICommand } from './command.ts';
 
-type specCommandHandler = (
+type SpecCommandHandler = (
   specCmd: string,
   argCmd: CLICommand,
   option?: 'description' | 'arguments' | 'subcommands' | 'all',
 ) => void;
 
 export class CMDService {
-  private specCommands: { [key: string]: specCommandHandler } = {};
-  public addSpecCommand(name: string, handler: specCommandHandler) {
+  private specCommands: { [key: string]: SpecCommandHandler } = {};
+  public addSpecCommand(name: string, handler: SpecCommandHandler) {
     this.specCommands[name] = handler;
   }
 

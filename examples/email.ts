@@ -1,4 +1,4 @@
-import { CLICommandBuilder, handlerArgs } from '../src/command.ts';
+import { CLICommandBuilder, HandlerArgs } from '../src/command.ts';
 import { CLI } from '../src/cli.ts';
 import { DefaultCommandArgument } from '../src/command.ts';
 
@@ -36,7 +36,7 @@ const sendCmd = new CLICommandBuilder()
     type: 'flag',
     required: false,
   })
-  .setHandler((args: handlerArgs) => {
+  .setHandler((args: HandlerArgs) => {
     if (args) {
       const [to, msg] = [args.to as string, args.msg as string];
       if (mail[to]) {
@@ -58,7 +58,7 @@ const listCmd = new CLICommandBuilder()
     type: 'email',
     prefixName: '--from',
   })
-  .setHandler(async (args: handlerArgs) => {
+  .setHandler(async (args: HandlerArgs) => {
     if (args) {
       const from = args.from as string;
       if (mail[from]) {

@@ -1,4 +1,4 @@
-import { Validator } from './validator.ts';
+import { Validator } from './Validator.ts';
 
 const defaultValidator = new Validator();
 

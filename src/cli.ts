@@ -1,8 +1,8 @@
 import { Validator } from './helpers/validator.ts';
-import { CLICommand, handlerArgs } from './command.ts';
+import { CLICommand, HandlerArgs } from './command.ts';
 import defaultCMDService, { CMDService } from './commandService.ts';
 import * as cliErrors from './errors/cliErrors.ts';
-import { tooManySpecError } from './errors/cmdServiceErrors.ts';
+import { TooManySpecError } from './errors/cmdServiceErrors.ts';
 import defaultValidator from './helpers/standartValidators.ts';
 
 interface IsplitSource {
@@ -57,7 +57,7 @@ export class CLI {
     });
     const specCmd = specCmds[0];
     if (specCmds.length > 1) {
-      throw new tooManySpecError(specCmds);
+      throw new TooManySpecError(specCmds);
     }
     if (specCmd) {
       specCommands.push(specCmd);
@@ -93,9 +93,9 @@ export class CLI {
   public parseArgs(
     parentCmd: CLICommand,
     rawArgs: string[],
-  ): handlerArgs {
+  ): HandlerArgs {
     if (parentCmd.arguments?.length === 0) return null;
-    const parsedArgs: handlerArgs = {};
+    const parsedArgs: HandlerArgs = {};
     const requiredArgs = parentCmd.arguments
       .filter((arg) => arg.required);
     let index = 0;

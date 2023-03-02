@@ -1,20 +1,20 @@
 import { NoValidatorError } from '../errors/validationErrors.ts';
 
 type ValidationFunction = (data: string) => boolean;
-export type valueExamples = string[];
+export type ValueExamples = string[];
 
 export class Validator {
   private validators: {
     [key: string]: ValidationFunction | [
       ValidationFunction,
-      valueExamples,
+      ValueExamples,
     ];
   } = {};
 
   public addValidator(
     type: string,
     validator: ValidationFunction,
-    examples?: valueExamples,
+    examples?: ValueExamples,
   ): void {
     if (!examples) {
       this.validators[type] = validator, examples;
@@ -37,7 +37,7 @@ export class Validator {
     return validator(data);
   }
 
-  public getExamples(type: string): valueExamples | null {
+  public getExamples(type: string): ValueExamples | null {
     if (!(type in this.validators)) {
       throw new NoValidatorError(type);
     }

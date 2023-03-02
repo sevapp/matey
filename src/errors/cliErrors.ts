@@ -1,4 +1,4 @@
-import { valueExamples } from '../helpers/validator.ts';
+import { ValueExamples } from '../helpers/validator.ts';
 import { CLICommand } from '../command.ts';
 
 export class MissingArgumentError extends Error {
@@ -73,7 +73,7 @@ export class ArgumentValidError extends Error {
   constructor(
     value: string,
     option: { name: string; type: string },
-    validResult?: valueExamples | null,
+    validResult?: ValueExamples | null,
   ) {
     super(
       `Invalid value "${value}" for option <${option.name}>.\nOption value type must be: ${option.type}\nExmaples: ${

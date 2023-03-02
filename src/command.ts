@@ -5,7 +5,7 @@ import {
 } from './errors/cmdErrors.ts';
 
 // const { generate } = v1;
-export type handlerArgs = Record<string, string | boolean> | null;
+export type HandlerArgs = Record<string, string | boolean> | null;
 export interface CommandArgument {
   name: string;
   prefixName?: string; // - or --
@@ -28,7 +28,7 @@ export interface CLICommand {
   description: string;
   arguments: CommandArgument[];
   subcommands: CLICommand[];
-  handler: (args: handlerArgs) => void;
+  handler: (args: HandlerArgs) => void;
 }
 
 export class CLICommandBuilder {
@@ -36,7 +36,7 @@ export class CLICommandBuilder {
   private description = '';
   private arguments: CommandArgument[] = [];
   private subcommands: CLICommand[] = [];
-  private handler?: (args: handlerArgs) => void;
+  private handler?: (args: HandlerArgs) => void;
 
   setName(name: string): CLICommandBuilder {
     this.name = name;
@@ -62,7 +62,7 @@ export class CLICommandBuilder {
   }
 
   setHandler(
-    handler: (args: handlerArgs) => void,
+    handler: (args: HandlerArgs) => void,
   ): CLICommandBuilder {
     this.handler = handler;
     return this;
