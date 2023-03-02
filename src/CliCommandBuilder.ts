@@ -1,8 +1,8 @@
 import {
-  NoCommandHandler,
-  NoCommandName,
-  NoCommandPrefix,
-} from './errors/cmdErrors.ts';
+  NoCommandHandlerError,
+  NoCommandNameError,
+  NoCommandPrefixError,
+} from './errors/mod.ts';
 
 export type HandlerArgs = Record<string, string | boolean> | null;
 export interface CommandArgument {
@@ -49,7 +49,7 @@ export class CliCommandBuilder {
 
   addArgument(argument: CommandArgument): CliCommandBuilder {
     if (!argument.required && !argument.prefixName) {
-      throw new NoCommandPrefix();
+      throw new NoCommandPrefixError();
     }
 
     this.arguments.push(argument);
@@ -70,11 +70,11 @@ export class CliCommandBuilder {
 
   build(): ICliCommand {
     if (!this.name) {
-      throw new NoCommandName();
+      throw new NoCommandNameError();
     }
 
     if (!this.handler) {
-      throw new NoCommandHandler(this.name);
+      throw new NoCommandHandlerError(this.name);
     }
 
     return {

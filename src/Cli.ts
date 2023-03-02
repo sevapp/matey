@@ -4,7 +4,7 @@ import defaultCmdService, { CmdService } from './CmdService.ts';
 import * as errors from './errors/mod.ts';
 import defaultValidator from './defaultValidator.ts';
 
-interface IsplitSource {
+interface ISplitSource {
   commandChain: ICliCommand[];
   rawArgs: string[];
   specCommand?: string;
@@ -46,7 +46,7 @@ export class Cli {
     );
   }
 
-  public splitSource(rawSource: string[]): IsplitSource {
+  public splitSource(rawSource: string[]): ISplitSource {
     if (rawSource.length === 0) {
       throw new errors.EmptySourceError();
     }
