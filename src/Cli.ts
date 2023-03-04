@@ -1,6 +1,5 @@
 import { Validator } from './Validator.ts';
 import { HandlerArgs, ICliCommand } from './CliCommandBuilder.ts';
-import defaultCmdService, { CmdService } from './CmdService.ts';
 import * as errors from './errors/mod.ts';
 import defaultValidator from './defaultValidator.ts';
 
@@ -15,8 +14,7 @@ interface IMiddleware {
   handler: (
     commands: ICliCommand[],
     args: HandlerArgs,
-    next?: (error?: Error) => void,
-  ) => void;
+  ) => boolean;
 }
 
 interface IParsed {
@@ -26,27 +24,25 @@ interface IParsed {
 
 export class Cli {
   private validator: Validator;
-  public cmdService: CmdService;
-
   private middlewares: IMiddleware[] = [];
   private commands: ICliCommand[] = [];
 
-  constructor(validator?: Validator, cmdService?: CmdService) {
+  // public setDefaultArgumentProps({})
+
+  constructor(validator?: Validator) {
     this.validator = validator ? validator : defaultValidator;
-    this.cmdService = cmdService ? cmdService : defaultCmdService;
   }
 
   public setValidator(validator: Validator) {
     this.validator = validator;
   }
 
-  public on(
+  public onMatch(
     pattern: RegExp,
     handler: (
       commands: ICliCommand[],
       args: HandlerArgs,
-      next: (error?: Error) => void,
-    ) => void,
+    ) => boolean,
   ) {
     this.middlewares.push({ pattern, handler });
   }

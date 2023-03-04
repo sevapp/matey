@@ -1,32 +1,26 @@
+import { ICommandArgument, Option } from './Argument.ts';
 import {
+  InvalidOptionSetError,
   NoCommandHandlerError,
   NoCommandNameError,
-  NoCommandPrefixError,
 } from './errors/mod.ts';
 
 export type HandlerArgs = Record<string, string | boolean> | null;
-export interface ICommandArgument {
-  name: string;
-  prefixName?: string; // - or --
-  type: string;
-  description: string;
-  required?: boolean;
-}
 
-export const DefaultCommandArgument: Pick<
-  ICommandArgument,
-  'type' | 'required' | 'prefixName'
-> = {
-  type: 'data',
-  required: true,
-  prefixName: '',
-};
+// export const DefaultCommandArgument: Pick<
+//   ICommandArgument,
+//   'type' | 'required' | 'prefixName'
+// > = {
+//   type: 'data',
+//   required: true,
+//   prefixName: '',
+// };
 
 export interface ICliCommand {
   name: string;
-  description: string;
-  arguments: ICommandArgument[];
-  subcommands: ICliCommand[];
+  description?: string;
+  arguments?: ICommandArgument[];
+  subcommands?: ICliCommand[];
   handler: (args: HandlerArgs) => void;
 }
 
@@ -48,10 +42,12 @@ export class CliCommandBuilder {
   }
 
   addArgument(argument: ICommandArgument): CliCommandBuilder {
-    if (!argument.required && !argument.prefixName) {
-      throw new NoCommandPrefixError();
+    if (
+      !argument.required && (argument.type instanceof Option) &&
+      (argument.type as Option) === null
+    ) {
+      throw new InvalidOptionSetError();
     }
-
     this.arguments.push(argument);
     return this;
   }
