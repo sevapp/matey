@@ -20,7 +20,7 @@ export interface ICliCommand {
   name: string;
   description?: string;
   arguments?: ICommandArgument[];
-  subcommands?: ICliCommand[];
+  subcommands: ICliCommand[];
   handler: (args: HandlerArgs) => void;
 }
 

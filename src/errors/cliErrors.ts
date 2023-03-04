@@ -55,6 +55,13 @@ export class UnknownOptionError extends Error {
   }
 }
 
+export class DuplicateMiddlewareError extends Error {
+  constructor(pattern: RegExp) {
+    super(`Middleware with pattern "${pattern}" already exists.`);
+    this.name = 'DuplicateMiddlewareError';
+  }
+}
+
 export class ExtraOptionalArgumentError extends Error {
   constructor(term: string) {
     super(`Unknown optional argument ${term} without prefix`);

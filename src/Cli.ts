@@ -2,6 +2,7 @@ import { Validator } from './Validator.ts';
 import { HandlerArgs, ICliCommand } from './CliCommandBuilder.ts';
 import * as errors from './errors/mod.ts';
 import defaultValidator from './defaultValidator.ts';
+import { DuplicateMiddlewareError } from './errors/mod.ts';
 
 interface ISplitSource {
   commandChain: ICliCommand[];
@@ -13,7 +14,7 @@ interface IMiddleware {
   pattern: RegExp;
   handler: (
     commands: ICliCommand[],
-    args: HandlerArgs,
+    parsedArgs: HandlerArgs,
   ) => boolean;
 }
 
@@ -26,9 +27,6 @@ export class Cli {
   private validator: Validator;
   private middlewares: IMiddleware[] = [];
   private commands: ICliCommand[] = [];
-
-  // public setDefaultArgumentProps({})
-
   constructor(validator?: Validator) {
     this.validator = validator ? validator : defaultValidator;
   }
@@ -37,22 +35,22 @@ export class Cli {
     this.validator = validator;
   }
 
-  public onMatch(
-    pattern: RegExp,
-    handler: (
-      commands: ICliCommand[],
-      args: HandlerArgs,
-    ) => boolean,
-  ) {
-    this.middlewares.push({ pattern, handler });
-  }
-
   public addCommand(command: ICliCommand) {
     if (this.commands.some((key) => key.name === command.name)) {
       throw new Error(`Command "${command.name}" already exists.`);
     }
-
     this.commands.push(command);
+  }
+
+  public use(middleware: IMiddleware): void {
+    const alreadyExists = this.middlewares.some((key) => {
+      key.pattern === middleware.pattern;
+    });
+
+    if (alreadyExists) {
+      throw new DuplicateMiddlewareError(middleware.pattern);
+    }
+    this.middlewares.push(middleware);
   }
 
   private isChildCommand(
