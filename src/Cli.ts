@@ -7,12 +7,28 @@ import defaultValidator from './defaultValidator.ts';
 interface ISplitSource {
   commandChain: ICliCommand[];
   rawArgs: string[];
-  specCommand?: string;
+  // specCommand?: string;
+}
+
+interface IMiddleware {
+  pattern: RegExp;
+  handler: (
+    commands: ICliCommand[],
+    args: HandlerArgs,
+    next?: (error?: Error) => void,
+  ) => void;
+}
+
+interface IParsed {
+  execCommand: ICliCommand;
+  parsedArgs: HandlerArgs;
 }
 
 export class Cli {
   private validator: Validator;
   public cmdService: CmdService;
+
+  private middlewares: IMiddleware[] = [];
   private commands: ICliCommand[] = [];
 
   constructor(validator?: Validator, cmdService?: CmdService) {
@@ -22,6 +38,17 @@ export class Cli {
 
   public setValidator(validator: Validator) {
     this.validator = validator;
+  }
+
+  public on(
+    pattern: RegExp,
+    handler: (
+      commands: ICliCommand[],
+      args: HandlerArgs,
+      next: (error?: Error) => void,
+    ) => void,
+  ) {
+    this.middlewares.push({ pattern, handler });
   }
 
   public addCommand(command: ICliCommand) {
@@ -50,28 +77,16 @@ export class Cli {
     if (rawSource.length === 0) {
       throw new errors.EmptySourceError();
     }
-    const specCommands: string[] = [];
-    const specCmds = rawSource.filter((term) => {
-      return this.cmdService.checkSpecCommand(term);
-    });
-    const specCmd = specCmds[0];
-    if (specCmds.length > 1) {
-      throw new errors.TooManySpecError(specCmds);
-    }
-    if (specCmd) {
-      specCommands.push(specCmd);
-    }
-    const source = rawSource.filter((term) => term !== specCmd);
     const commandChain: ICliCommand[] = [];
     const rawArgs: string[] = [];
     let parent: ICliCommand | null = null;
-    let term = this.commands.find((c) => c.name === source[0]);
+    let term = this.commands.find((c) => c.name === rawSource[0]);
     if (term === undefined) {
-      throw new errors.NoCommandError(source[0]);
+      throw new errors.NoCommandError(rawSource[0]);
     }
     let i = 0;
     while (
-      i < source.length &&
+      i < rawSource.length &&
       this.isChildCommand(parent, term)
     ) {
       commandChain.push(term as ICliCommand);
@@ -79,13 +94,12 @@ export class Cli {
       i++;
       term = commandChain[commandChain.length - 1].subcommands.find((
         c,
-      ) => c.name === source[i]);
+      ) => c.name === rawSource[i]);
     }
-    rawArgs.push(...source.slice(i));
+    rawArgs.push(...rawSource.slice(i));
     return {
       commandChain,
       rawArgs,
-      specCommand: specCommands[0],
     };
   }
 
@@ -172,24 +186,54 @@ export class Cli {
 
   public parse(
     s: string | string[],
-  ): void {
+  ): IParsed {
     const regex = /[^\s"']+|"([^"]*)"|'([^']*)'/g;
     const rawSource = Array.isArray(s) ? s : s.match(regex);
     if (rawSource === null) {
       throw new errors.EmptySourceError();
     }
-    const { commandChain, rawArgs, specCommand } = this.splitSource(
+    const { commandChain, rawArgs } = this.splitSource(
       rawSource,
     );
-    if (specCommand !== undefined) {
-      this.cmdService.handleSpecCommand(
-        specCommand,
-        commandChain[commandChain.length - 1],
-      );
-      return;
-    }
+
     const parentCmd = commandChain[commandChain.length - 1];
     const parsedArgs = this.parseArgs(parentCmd, rawArgs);
-    parentCmd.handler(parsedArgs);
+    return {
+      execCommand: parentCmd,
+      parsedArgs,
+    };
+    // parentCmd.handler(parsedArgs);
+  }
+
+  public exec(s: string | string[]) {
+    const rawSource = Array.isArray(s) ? s : s.split(' ');
+    let commandStr = rawSource.join(' ');
+    this.middlewares.forEach((middleware) => {
+      commandStr = commandStr.replace(middleware.pattern, ' ');
+    });
+
+    const { execCommand, parsedArgs } = this.parse(commandStr.trim());
+    let currentMiddlewareIndex = -1;
+    const executeMiddleware = (error?: Error) => {
+      currentMiddlewareIndex++;
+      if (
+        error || currentMiddlewareIndex >= this.middlewares.length
+      ) {
+        execCommand.handler(parsedArgs);
+      } else {
+        const currentMiddleware =
+          this.middlewares[currentMiddlewareIndex];
+        if (currentMiddleware.pattern.test(rawSource.join(' '))) {
+          currentMiddleware.handler(
+            [execCommand],
+            parsedArgs,
+            executeMiddleware,
+          );
+        } else {
+          executeMiddleware();
+        }
+      }
+    };
+    executeMiddleware();
   }
 }
