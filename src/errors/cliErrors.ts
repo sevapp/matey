@@ -19,10 +19,10 @@ export class NoCommandError extends Error {
   }
 }
 
-export class EmptySourceError extends Error {
+export class InvalidSourceError extends Error {
   constructor() {
-    super(`Empty source.`);
-    this.name = 'NoCommandError';
+    super(`Invalid source.`);
+    this.name = 'InvalidSourceError';
   }
 }
 

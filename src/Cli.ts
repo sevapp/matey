@@ -3,6 +3,7 @@ import { HandlerArgs, ICliCommand } from './CliCommandBuilder.ts';
 import * as errors from './errors/mod.ts';
 import defaultValidator from './defaultValidator.ts';
 import { DuplicateMiddlewareError } from './errors/mod.ts';
+import { IFlag, Option } from './Argument.ts';
 
 interface ISplitSource {
   commandChain: ICliCommand[];
@@ -26,7 +27,7 @@ interface IParsed {
 export class Cli {
   private validator: Validator;
   private middlewares: IMiddleware[] = [];
-  private commands: ICliCommand[] = [];
+  public commands: ICliCommand[] = [];
   constructor(validator?: Validator) {
     this.validator = validator ? validator : defaultValidator;
   }
@@ -51,6 +52,24 @@ export class Cli {
       throw new DuplicateMiddlewareError(middleware.pattern);
     }
     this.middlewares.push(middleware);
+  }
+
+  public lex(source: string | string[]): ILexeme[] {
+    const lexemes: ILexeme[] = [];
+    const quotesAvoidRegExp = /[^\s"']+|"([^"]*)"|'([^']*)'/g;
+    const tokens = Array.isArray(source)
+      ? source
+      : source.match(quotesAvoidRegExp);
+    if (tokens === null) {
+      throw new errors.InvalidSourceError();
+    }
+    for (const token of tokens) {
+      const isCommand = this.commands.some((key) =>
+        key.name === token
+      );
+      const isOption = this.commands.some((key) => {
+      });
+    }
   }
 
   private isChildCommand(
