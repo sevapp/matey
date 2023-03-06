@@ -1,8 +1,4 @@
-import {
-  Cli,
-  CliCommandBuilder,
-  DefaultCommandArgument,
-} from '../mod.ts';
+import { Cli, CliCommandBuilder } from '../mod.ts';
 import { ICliCommand } from '../src/CliCommandBuilder.ts';
 
 const mail: Record<string, string[]> = {};
@@ -11,11 +7,9 @@ const sendCmd = new CliCommandBuilder()
   .setName('send')
   .setDescription('Send @msg to @to')
   .addArgument({
-    ...DefaultCommandArgument,
     name: 'to',
     description: 'Recipient email',
-    prefixName: '--to',
-    type: 'email',
+    type: new Option('to', 'email', true),
   })
   .addArgument({
     ...DefaultCommandArgument,

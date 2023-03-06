@@ -1,6 +1,10 @@
-import { ICommandArgument, Option } from './Argument.ts';
 import {
-  InvalidOptionSetError,
+  ArgumentType,
+  ICommandArgument,
+  Option,
+} from './Argument.ts';
+import {
+  InvalidOptionCreateError,
   NoCommandHandlerError,
   NoCommandNameError,
 } from './errors/mod.ts';
@@ -43,10 +47,10 @@ export class CliCommandBuilder {
 
   addArgument(argument: ICommandArgument): CliCommandBuilder {
     if (
-      !argument.required && (argument.type instanceof Option) &&
-      (argument.type as Option) === null
+      !argument.required && (argument.type === ArgumentType.OPTION) &&
+      !argument.optionNameRequired
     ) {
-      throw new InvalidOptionSetError();
+      throw new InvalidOptionCreateError();
     }
     this.arguments.push(argument);
     return this;

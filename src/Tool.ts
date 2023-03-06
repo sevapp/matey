@@ -4,6 +4,7 @@ import * as errors from './errors/mod.ts';
 import defaultValidator from './defaultValidator.ts';
 import { DuplicateMiddlewareError } from './errors/mod.ts';
 import { Flag, Option } from './Argument.ts';
+import { ArgumentType } from './Argument.ts';
 
 interface ISplitSource {
   commandChain: ICliCommand[];
@@ -48,13 +49,21 @@ export class Cli {
     this.validator = validator;
   }
 
+
+
   public addCommand(command: ICliCommand) {
     if (this.commands.some((key) => key.name === command.name)) {
       throw new Error(`Command "${command.name}" already exists.`);
     }
     this.knownLexemes.knownCommands.push(command.name);
     command.arguments?.forEach((arg) => {
-      arg.type;
+      if (arg.type === ) {
+        if (arg.type.name !== undefined && arg.type.name !== null) {
+          this.knownLexemes.knownOptions.push(arg.type.name);
+        }
+      } else if (arg.type instanceof Flag) {
+        this.knownLexemes.knownFlags.push(arg.type.name);
+      }
     });
     this.commands.push(command);
   }

@@ -10,13 +10,30 @@ export enum ValueType {
   FILENAME,
 }
 
+export enum ArgumentType {
+  FLAG,
+  OPTION,
+}
+
 export class Option {
-  name: string | null = null;
-  value: IValue = {} as IValue;
+  constructor(value: IValue, name?: string, nameRequired?: boolean) {
+    this.name = name || null;
+    this.value = value;
+    if (nameRequired !== undefined) {
+      this.nameRequired = nameRequired;
+    }
+  }
+  name?: string | null = null;
+
+  nameRequired = true;
+  value: IValue | null = null;
 }
 
 export class Flag {
-  name: string | null = null;
+  constructor(name: string) {
+    this.name = name;
+  }
+  name: string;
 }
 
 export interface IValue {
@@ -26,8 +43,8 @@ export interface IValue {
 
 export interface ICommandArgument {
   name: string;
-  //   prefixName?: string; // - or --
-  type: Flag | Option;
+  type: ArgumentType;
+  optionNameRequired?: boolean;
   description: string;
   required: boolean;
 }
