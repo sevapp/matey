@@ -1,6 +1,7 @@
 import { Option } from "./Argument.ts";
-import { Cli } from './Cli.ts';
+
 import * as errors from './errors/mod.ts';
+
 enum LexemeType {
   COMMAND,
   OPTION,
@@ -16,7 +17,7 @@ interface ILexeme {
 
 
 function isCommand(term: string, cli: Cli): boolean {
-  return cli.commands.some((key) => key.name === term);
+  return cli.knownLexemes.knownCommands.some((key) => key === term);
 }
 
 function isOption(term: string, cli: Cli): boolean {

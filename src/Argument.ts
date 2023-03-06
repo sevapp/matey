@@ -15,7 +15,9 @@ export class Option {
   value: IValue = {} as IValue;
 }
 
-export type IFlag = string | null;
+export class Flag {
+  name: string | null = null;
+}
 
 export interface IValue {
   data: string | null;
@@ -25,7 +27,7 @@ export interface IValue {
 export interface ICommandArgument {
   name: string;
   //   prefixName?: string; // - or --
-  type: IFlag | Option;
+  type: Flag | Option;
   description: string;
   required: boolean;
 }
