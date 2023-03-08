@@ -5,11 +5,11 @@ import defaultValidator from './defaultValidator.ts';
 import { DuplicateMiddlewareError } from './errors/mod.ts';
 
 import { ArgumentType, defaultValueType } from './Argument.ts';
+import { ILexeme, LexemeType } from './Lexer.ts';
 
 interface ISplitSource<valueType = defaultValueType> {
   commandChain: ICliCommand<valueType | defaultValueType>[];
   rawArgs: string[];
-  // specCommand?: string;
 }
 
 interface IMiddleware<valueType = defaultValueType> {
@@ -41,6 +41,7 @@ export class Cli<valueType = defaultValueType> {
     knownFlags: [],
   };
   public commands: ICliCommand<valueType>[] = [];
+  public subcommands: ICliCommand<valueType>[] = [];
   constructor(validator?: Validator) {
     this.validator = validator ? validator : defaultValidator;
   }
@@ -68,6 +69,9 @@ export class Cli<valueType = defaultValueType> {
       throw new Error(`Command "${command.name}" already exists.`);
     }
     this.addToKnownLexemes(command);
+    command.subcommands?.forEach((subcommand) => {
+      this.subcommands.push(subcommand);
+    });
     this.commands.push(command);
   }
 
@@ -82,14 +86,37 @@ export class Cli<valueType = defaultValueType> {
     this.middlewares.push(middleware);
   }
 
+  getExecCommand(lexemes: ILexeme[]): ICliCommand<valueType> {
+    const commands = lexemes.map((lexeme) =>
+      lexeme.type === LexemeType.COMMAND
+        ? this.commands.concat(this.subcommands).find(
+          (key) => key.name === lexeme.content,
+        )
+        : null
+    ).filter((value) => value !== null) as ICliCommand<
+      valueType
+    >[];
+    if (commands.length === 0) throw new errors.NoCommandFoundError();
+
+    const finalCommand = commands.reduce(
+      (parentCommand, childCommand) => {
+        if (this.isChildCommand(parentCommand, childCommand)) {
+          return childCommand;
+        } else {
+          return parentCommand;
+        }
+      },
+      null as ICliCommand<valueType> | null,
+    );
+    return finalCommand === null ? commands[0] : finalCommand;
+  }
+
   private isChildCommand(
     parentCmd: ICliCommand<valueType> | null,
-    childCmd: ICliCommand<valueType> | undefined,
+    childCmd: ICliCommand<valueType> | null,
   ) {
-    if (childCmd === undefined) return false;
-    if (!parentCmd) {
-      return this.commands.some((key) => key.name === childCmd.name);
-    }
+    if (childCmd === null) return false;
+    if (parentCmd === null) return true;
 
     return parentCmd.subcommands.some((key) =>
       key.name === childCmd.name

@@ -40,6 +40,12 @@ cli.addCommand(
           valueType: defaultValueType.DATA,
           required: true,
         })
+        .addArgument({
+          name: '--noResponse',
+          description: 'Write  if you don\'t want to get response',
+          type: ArgumentType.FLAG,
+          required: false,
+        })
         .setHandler((args) => {})
         .build(),
     )
@@ -49,14 +55,46 @@ cli.addCommand(
 
 Deno.test('[Lexer test] Correct detect lexemes', () => {
   assertEquals(
-    lex(['email', 'send', '--to', 'a@mail.ru', 'Hello'], cli),
+    lex([
+      'email',
+      'send',
+      '--to',
+      'a@mail.ru',
+      'Hello',
+      '--noResponse',
+    ], cli),
     [
       { type: LexemeType.COMMAND, content: 'email' },
       { type: LexemeType.COMMAND, content: 'send' },
       { type: LexemeType.OPTION, content: '--to' },
       { type: LexemeType.MAYBE_VALUE, content: 'a@mail.ru' },
       { type: LexemeType.MAYBE_VALUE, content: 'Hello' },
+      { type: LexemeType.FLAG, content: '--noResponse' },
     ],
+  );
+});
+
+Deno.test('[Tool test] Correct detect final command', () => {
+  assertEquals(
+    cli.getExecCommand(lex([
+      'email',
+      'send',
+      '--to',
+      'a@mail.ru',
+      'Hello',
+      '--noResponse',
+    ], cli)).name,
+    'send',
+  );
+});
+
+Deno.test('[Tool test] Correct detect final command 2', () => {
+  assertEquals(
+    cli.getExecCommand(lex([
+      'email',
+      'ololo',
+    ], cli)).name,
+    'email',
   );
 });
 

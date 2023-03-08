@@ -7,7 +7,7 @@ export enum LexemeType {
   MAYBE_VALUE,
 }
 
-interface ILexeme {
+export interface ILexeme {
   type: LexemeType;
   content: string;
 }
@@ -25,7 +25,6 @@ function isFlag(term: string, cli: Cli): boolean {
 }
 
 export function lex(source: string | string[], cli: Cli): ILexeme[] {
-  console.log(cli.knownLexemes);
   const lexemes: ILexeme[] = [];
   const quotesAvoidRegExp = /[^\s"']+|"([^"]*)"|'([^']*)'/g;
   const tokens = Array.isArray(source)

@@ -14,6 +14,13 @@ export class MissingArgumentError<valueType = defaultValueType>
   }
 }
 
+export class NoCommandFoundError extends Error {
+  constructor() {
+    super(`No commands found.`);
+    this.name = 'NoCommandsFoundError';
+  }
+}
+
 export class NoCommandError extends Error {
   constructor(cmd: string) {
     super(`Command "${cmd}" not found.`);
