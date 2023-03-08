@@ -6,11 +6,10 @@ import { DuplicateMiddlewareError } from './errors/mod.ts';
 
 import { ArgumentType, defaultValueType } from './Argument.ts';
 import { ILexeme, LexemeType } from './Lexer.ts';
-
-interface ISplitSource<valueType = defaultValueType> {
-  commandChain: ICliCommand<valueType | defaultValueType>[];
-  rawArgs: string[];
-}
+import {
+  addToKnownLexemes,
+  isChildCommand,
+} from './helpers/toolHelper.ts';
 
 interface IMiddleware<valueType = defaultValueType> {
   pattern: RegExp;
@@ -18,11 +17,6 @@ interface IMiddleware<valueType = defaultValueType> {
     commands: ICliCommand<valueType>[],
     parsedArgs: HandlerArgs,
   ) => boolean;
-}
-
-interface IParsed<valueType = defaultValueType> {
-  execCommand: ICliCommand<valueType>;
-  parsedArgs: HandlerArgs;
 }
 
 interface IKnownLexemes {
@@ -50,25 +44,11 @@ export class Cli<valueType = defaultValueType> {
     this.validator = validator;
   }
 
-  addToKnownLexemes(command: ICliCommand<valueType>) {
-    this.knownLexemes.knownCommands.push(command.name);
-    command.arguments?.forEach((arg) => {
-      if (arg.type === ArgumentType.OPTION) {
-        this.knownLexemes.knownOptions.push(arg.name);
-      } else if (arg.type === ArgumentType.FLAG) {
-        this.knownLexemes.knownFlags.push(arg.name);
-      }
-    });
-    command.subcommands?.forEach((subcommand) => {
-      this.addToKnownLexemes(subcommand);
-    });
-  }
-
   public addCommand(command: ICliCommand<valueType>) {
     if (this.commands.some((key) => key.name === command.name)) {
       throw new Error(`Command "${command.name}" already exists.`);
     }
-    this.addToKnownLexemes(command);
+    addToKnownLexemes(command, this);
     command.subcommands?.forEach((subcommand) => {
       this.subcommands.push(subcommand);
     });
@@ -93,14 +73,12 @@ export class Cli<valueType = defaultValueType> {
           (key) => key.name === lexeme.content,
         )
         : null
-    ).filter((value) => value !== null) as ICliCommand<
-      valueType
-    >[];
+    ).filter((value) => value !== null) as ICliCommand<valueType>[];
     if (commands.length === 0) throw new errors.NoCommandFoundError();
 
     const finalCommand = commands.reduce(
       (parentCommand, childCommand) => {
-        if (this.isChildCommand(parentCommand, childCommand)) {
+        if (isChildCommand<valueType>(parentCommand, childCommand)) {
           return childCommand;
         } else {
           return parentCommand;
@@ -109,18 +87,6 @@ export class Cli<valueType = defaultValueType> {
       null as ICliCommand<valueType> | null,
     );
     return finalCommand === null ? commands[0] : finalCommand;
-  }
-
-  private isChildCommand(
-    parentCmd: ICliCommand<valueType> | null,
-    childCmd: ICliCommand<valueType> | null,
-  ) {
-    if (childCmd === null) return false;
-    if (parentCmd === null) return true;
-
-    return parentCmd.subcommands.some((key) =>
-      key.name === childCmd.name
-    );
   }
 
   // public splitSource(rawSource: string[]): ISplitSource {

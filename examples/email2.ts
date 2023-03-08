@@ -90,10 +90,14 @@ cli.addCommand(
     .build(),
 );
 
-cli.getExecCommand(lex([
-  'email',
-  '--to',
-  'a@mail.ru',
-  'Hello',
-  '--noResponse',
-], cli));
+try {
+  console.log(cli.getExecCommand(lex([
+    '--to',
+    'a@mail.ru',
+    'Hello',
+    '--noResponse',
+    'email',
+  ], cli)));
+} catch (e) {
+  console.log(e);
+}
