@@ -1,11 +1,13 @@
+import { defaultValueType } from './../Argument.ts';
 import { ValueExamples } from '../Validator.ts';
 import { ICliCommand } from '../CliCommandBuilder.ts';
 
-export class MissingArgumentError extends Error {
-  constructor(parentCmd: ICliCommand) {
+export class MissingArgumentError<valueType = defaultValueType>
+  extends Error {
+  constructor(parentCmd: ICliCommand<valueType>) {
     super(
-      `Expected ${parentCmd.arguments.length} arguments <${
-        parentCmd.arguments.map((arg) => arg.name).join(',')
+      `Expected ${parentCmd.arguments?.length} arguments <${
+        parentCmd.arguments?.map((arg) => arg.name).join(',')
       }>, received nothing.`,
     );
     this.name = 'MissingArgumentError';
@@ -33,10 +35,11 @@ export class MissingValueError extends Error {
   }
 }
 
-export class MissingRequiredArgsError extends Error {
+export class MissingRequiredArgsError<valueType = defaultValueType>
+  extends Error {
   constructor(
     requiredArgs: { name: string }[],
-    parentCmd: ICliCommand,
+    parentCmd: ICliCommand<valueType>,
     requiredArgsCount: number,
   ) {
     super(
@@ -69,8 +72,9 @@ export class ExtraOptionalArgumentError extends Error {
   }
 }
 
-export class ExtraArgumentError extends Error {
-  constructor(parentCmd: ICliCommand) {
+export class ExtraArgumentError<valueType = defaultValueType>
+  extends Error {
+  constructor(parentCmd: ICliCommand<valueType>) {
     super(`Command "${parentCmd.name}" does not accept arguments.`);
     this.name = 'ExtraArgumentError';
   }

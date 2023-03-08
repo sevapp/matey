@@ -12,7 +12,7 @@ enum myValueTypes {
 const sendCmd = new CliCommandBuilder<myValueTypes>()
   .setName('send')
   .setDescription('Send @msg to @to')
-  .addArgument<myValueTypes>({
+  .addArgument({
     name: 'to',
     description: 'Recipient email',
     type: ArgumentType.OPTION,

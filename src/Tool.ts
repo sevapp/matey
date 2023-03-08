@@ -3,25 +3,25 @@ import { HandlerArgs, ICliCommand } from './CliCommandBuilder.ts';
 import * as errors from './errors/mod.ts';
 import defaultValidator from './defaultValidator.ts';
 import { DuplicateMiddlewareError } from './errors/mod.ts';
-import { Flag, Option } from './Argument.ts';
-import { ArgumentType } from './Argument.ts';
 
-interface ISplitSource {
-  commandChain: ICliCommand[];
+import { ArgumentType, defaultValueType } from './Argument.ts';
+
+interface ISplitSource<valueType = defaultValueType> {
+  commandChain: ICliCommand<valueType | defaultValueType>[];
   rawArgs: string[];
   // specCommand?: string;
 }
 
-interface IMiddleware {
+interface IMiddleware<valueType = defaultValueType> {
   pattern: RegExp;
   handler: (
-    commands: ICliCommand[],
+    commands: ICliCommand<valueType>[],
     parsedArgs: HandlerArgs,
   ) => boolean;
 }
 
-interface IParsed {
-  execCommand: ICliCommand;
+interface IParsed<valueType = defaultValueType> {
+  execCommand: ICliCommand<valueType>;
   parsedArgs: HandlerArgs;
 }
 
@@ -31,16 +31,16 @@ interface IKnownLexemes {
   knownFlags: string[];
 }
 
-export class Cli {
+export class Cli<valueType = defaultValueType> {
   private validator: Validator;
-  private middlewares: IMiddleware[] = [];
+  private middlewares: IMiddleware<valueType>[] = [];
 
   public knownLexemes: IKnownLexemes = {
     knownCommands: [],
     knownOptions: [],
     knownFlags: [],
   };
-  public commands: ICliCommand[] = [];
+  public commands: ICliCommand<valueType>[] = [];
   constructor(validator?: Validator) {
     this.validator = validator ? validator : defaultValidator;
   }
@@ -49,24 +49,29 @@ export class Cli {
     this.validator = validator;
   }
 
-  public addCommand(command: ICliCommand) {
-    if (this.commands.some((key) => key.name === command.name)) {
-      throw new Error(`Command "${command.name}" already exists.`);
-    }
+  addToKnownLexemes(command: ICliCommand<valueType>) {
     this.knownLexemes.knownCommands.push(command.name);
     command.arguments?.forEach((arg) => {
       if (arg.type === ArgumentType.OPTION) {
-        if (arg.type.name !== undefined && arg.type.name !== null) {
-          this.knownLexemes.knownOptions.push(arg.type.name);
-        }
-      } else if (arg.type instanceof Flag) {
-        this.knownLexemes.knownFlags.push(arg.type.name);
+        this.knownLexemes.knownOptions.push(arg.name);
+      } else if (arg.type === ArgumentType.FLAG) {
+        this.knownLexemes.knownFlags.push(arg.name);
       }
     });
+    command.subcommands?.forEach((subcommand) => {
+      this.addToKnownLexemes(subcommand);
+    });
+  }
+
+  public addCommand(command: ICliCommand<valueType>) {
+    if (this.commands.some((key) => key.name === command.name)) {
+      throw new Error(`Command "${command.name}" already exists.`);
+    }
+    this.addToKnownLexemes(command);
     this.commands.push(command);
   }
 
-  public use(middleware: IMiddleware): void {
+  public use(middleware: IMiddleware<valueType>): void {
     const alreadyExists = this.middlewares.some((key) => {
       key.pattern === middleware.pattern;
     });
@@ -78,8 +83,8 @@ export class Cli {
   }
 
   private isChildCommand(
-    parentCmd: ICliCommand | null,
-    childCmd: ICliCommand | undefined,
+    parentCmd: ICliCommand<valueType> | null,
+    childCmd: ICliCommand<valueType> | undefined,
   ) {
     if (childCmd === undefined) return false;
     if (!parentCmd) {
