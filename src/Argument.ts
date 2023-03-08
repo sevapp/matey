@@ -1,4 +1,4 @@
-export enum ValueType {
+export enum defaultValueType {
   DATA,
   EMAIL,
   NUMBER,
@@ -15,8 +15,12 @@ export enum ArgumentType {
   OPTION,
 }
 
-export class Option {
-  constructor(value: IValue, name?: string, nameRequired?: boolean) {
+export class Option<valueType> {
+  constructor(
+    value: IValue<valueType>,
+    name?: string,
+    nameRequired?: boolean,
+  ) {
     this.name = name || null;
     this.value = value;
     if (nameRequired !== undefined) {
@@ -26,7 +30,7 @@ export class Option {
   name?: string | null = null;
 
   nameRequired = true;
-  value: IValue | null = null;
+  value: IValue<valueType> | null = null;
 }
 
 export class Flag {
@@ -36,15 +40,16 @@ export class Flag {
   name: string;
 }
 
-export interface IValue {
+export interface IValue<valueType> {
   data: string | null;
-  type: ValueType;
+  type: valueType;
 }
 
-export interface ICommandArgument {
+export interface ICommandArgument<valueType> {
   name: string;
-  type: ArgumentType;
-  optionNameRequired?: boolean;
   description: string;
+  type: ArgumentType;
+  valueType?: defaultValueType | valueType;
+  optionNameRequired?: boolean;
   required: boolean;
 }

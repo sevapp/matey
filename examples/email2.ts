@@ -1,15 +1,22 @@
-import { Option } from '../src/Argument.ts';
+import { defaultValueType } from './../src/Argument.ts';
 import { CliCommandBuilder } from '../src/CliCommandBuilder.ts';
-import { ArgumentType, ValueType } from '../src/Argument.ts';
+import { ArgumentType } from '../src/Argument.ts';
 const mail: Record<string, string[]> = {};
 
-const sendCmd = new CliCommandBuilder()
+enum myValueTypes {
+  aaa,
+  bbb,
+  ccc,
+}
+
+const sendCmd = new CliCommandBuilder<myValueTypes>()
   .setName('send')
   .setDescription('Send @msg to @to')
-  .addArgument({
+  .addArgument<myValueTypes>({
     name: 'to',
     description: 'Recipient email',
     type: ArgumentType.OPTION,
+    valueType: myValueTypes.aaa,
     optionNameRequired: true,
     required: true,
   })
@@ -17,6 +24,7 @@ const sendCmd = new CliCommandBuilder()
     name: 'msg',
     description: 'Message to send',
     type: ArgumentType.OPTION,
+    valueType: defaultValueType.DATA,
     required: true,
   })
   .addArgument({

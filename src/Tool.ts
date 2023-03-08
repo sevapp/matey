@@ -49,15 +49,13 @@ export class Cli {
     this.validator = validator;
   }
 
-
-
   public addCommand(command: ICliCommand) {
     if (this.commands.some((key) => key.name === command.name)) {
       throw new Error(`Command "${command.name}" already exists.`);
     }
     this.knownLexemes.knownCommands.push(command.name);
     command.arguments?.forEach((arg) => {
-      if (arg.type === ) {
+      if (arg.type === ArgumentType.OPTION) {
         if (arg.type.name !== undefined && arg.type.name !== null) {
           this.knownLexemes.knownOptions.push(arg.type.name);
         }
