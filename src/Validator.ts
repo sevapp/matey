@@ -1,53 +1,53 @@
-import { NoValidatorError } from './errors/mod.ts';
+import { defaultValueType } from './Argument.ts';
+import * as errors from './errors/validationErrors.ts';
 
-type ValidationFunction = (data: string) => boolean;
-export type ValueExamples = string[];
+type ValidatorsMap<valueType> = {
+  [key in keyof valueType]: ValidationFunction<valueType>;
+};
 
-export class Validator {
-  private validators: {
-    [key: string]: ValidationFunction | [
-      ValidationFunction,
-      ValueExamples,
-    ];
-  } = {};
+type ValidationFunction<valueType> = (
+  data: keyof valueType,
+) => boolean;
+
+export class Validator<
+  valueType extends Record<string, any> = typeof defaultValueType,
+> {
+  private validators: ValidatorsMap<valueType> = {} as ValidatorsMap<
+    valueType
+  >;
+
+  constructor(enumType?: valueType) {
+    if (enumType) {
+      this.validators = {} as ValidatorsMap<valueType>;
+      for (const key in enumType) {
+        this.validators[enumType[key]] = () => true;
+      }
+    }
+  }
 
   public addValidator(
-    type: string,
-    validator: ValidationFunction,
-    examples?: ValueExamples,
+    type: keyof valueType,
+    validator: ValidationFunction<valueType>,
   ): void {
-    if (!examples) {
-      this.validators[type] = validator, examples;
-    } else this.validators[type] = [validator, examples];
+    this.validators[type] = validator;
   }
 
   public validate(
-    type: string,
+    type: valueType[keyof valueType],
     data: string,
   ): boolean {
-    if (!(type in this.validators)) {
-      throw new NoValidatorError(
+    const typeKey = Object.keys(this.validators).find(
+      (key) => this.validators[key as keyof valueType] === type,
+    );
+
+    if (!typeKey) {
+      throw new errors.NoValidatorError(
         `No validator found for type ${type}`,
       );
     }
 
-    const validator = this.validators[type];
-    if (Array.isArray(validator)) {
-      return validator[0](data);
-    }
+    const validFunc = this.validators[typeKey];
 
-    return validator(data);
-  }
-
-  public getExamples(type: string): ValueExamples | null {
-    if (!(type in this.validators)) {
-      throw new NoValidatorError(type);
-    }
-
-    const validator = this.validators[type];
-    if (Array.isArray(validator)) {
-      return validator[1];
-    }
-    return null;
+    return validFunc(data);
   }
 }

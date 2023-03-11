@@ -78,12 +78,12 @@ cli.addCommand(
           valueType: defaultValueType.DATA,
           required: true,
         })
-        .addArgument({
-          name: '--noResponse',
-          description: 'Write  if you don\'t want to get response',
-          type: ArgumentType.FLAG,
-          required: false,
-        })
+        // .addArgument({
+        //   name: '--noResponse',
+        //   description: 'Write  if you don\'t want to get response',
+        //   type: ArgumentType.FLAG,
+        //   required: false,
+        // })
         .setHandler((args) => {})
         .build(),
     )
@@ -105,7 +105,7 @@ cli.use(middleware);
 
 try {
   cli
-    .execute`email send --to help a@mail.ru "Hello world" --noResponse`;
+    .execute`email  --to a@mail.ru send "Hello world" --noResponse`;
 } catch (e) {
   console.log(e);
 }

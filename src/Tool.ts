@@ -5,7 +5,12 @@ import defaultValidator from './defaultValidator.ts';
 import { DuplicateMiddlewareError } from './errors/mod.ts';
 
 import { ArgumentType, defaultValueType } from './Argument.ts';
-import { ILexeme, lex, LexemeType } from './Lexer.ts';
+import {
+  ILexeme,
+  lex,
+  LexemeType,
+  quoteAvoidSplit,
+} from './Lexer.ts';
 import {
   addToKnownLexemes,
   isChildCommand,
@@ -119,6 +124,38 @@ export class Cli<valueType = defaultValueType> {
     if (!commandsOnStart) {
       throw new errors.CommandNotOnStartError();
     }
+    const args = quoteAvoidSplit(
+      source.replace(commandChainNames.join(' '), ''),
+    );
+    const lexemeArgs = lexemes.filter((lexeme) => {
+      return lexeme.type !== LexemeType.COMMAND;
+    });
+    const parsedArgs: HandlerArgs = {};
+    const requiredArgs = lastCommand.arguments?.filter((arg) =>
+      arg.required
+    );
+    let requiredArgsGrabbed = 0;
+    lexemes.forEach((lexeme, index) => {
+      if (lexeme.type === LexemeType.OPTION) {
+        const option = lastCommand.arguments?.find((arg) =>
+          arg.name === lexeme.content
+        );
+        if (option === undefined) {
+          throw new errors.UnknownOptionError(lexeme.content);
+        }
+        if (option.required) {
+          const possibleValue = args.indexOf(
+            lexemes[index + 1].content,
+          );
+          const valueType = option.valueType;
+          //   const isValidValue = this.validator.validate(
+          //     option.valueType,
+          //     ,
+          //     possibleValue,
+          //   );
+        }
+      }
+    });
   }
 
   execute(rawSource: TemplateStringsArray | string[]): void {
@@ -127,6 +164,7 @@ export class Cli<valueType = defaultValueType> {
       source,
     );
     if (!allHandlersReturnedTrue) return;
+    this.parseArgs(lexemes, source);
   }
 
   // public parseArgs(

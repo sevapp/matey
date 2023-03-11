@@ -24,7 +24,7 @@ export interface ICommandArgument<valueType> {
   name: string;
   description: string;
   type: ArgumentType;
-  valueType?: defaultValueType | valueType;
+  valueType: defaultValueType | valueType | defaultValueType.DATA;
   optionNameRequired?: boolean;
   required: boolean;
 }

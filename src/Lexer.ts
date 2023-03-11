@@ -33,16 +33,22 @@ function isFlag<valueType>(
   return cli.knownLexemes.knownFlags.some((key) => key === term);
 }
 
+export function quoteAvoidSplit(source: string): string[] {
+  const quotesAvoidRegExp = /[^\s"']+|"([^"]*)"|'([^']*)'/g;
+  const matches = source.match(quotesAvoidRegExp);
+  if (matches === null) {
+    throw new errors.InvalidSourceError();
+  }
+  return matches;
+}
+
 export function lex<valueType>(
-  source: string | string[],
+  source: string,
   cli: Cli<valueType>,
 ): ILexeme[] {
   const lexemes: ILexeme[] = [];
-  const quotesAvoidRegExp = /[^\s"']+|"([^"]*)"|'([^']*)'/g;
-  const tokens = Array.isArray(source)
-    ? source
-    : source.match(quotesAvoidRegExp);
-  // const tokens = source;
+  const tokens = quoteAvoidSplit(source);
+
   if (tokens === null) {
     throw new errors.InvalidSourceError();
   }
