@@ -1,3 +1,4 @@
+import { ILexeme } from './../src/Lexer.ts';
 // import { defaultValueType } from './../src/Argument.ts';
 // import { CliCommandBuilder } from '../src/CliCommandBuilder.ts';
 // import { ArgumentType } from '../src/Argument.ts';
@@ -41,7 +42,7 @@ import {
   assertThrows,
 } from 'https://deno.land/std@0.177.0/testing/asserts.ts';
 import { CliCommandBuilder } from '../src/CliCommandBuilder.ts';
-import { Cli } from '../src/Tool.ts';
+import { Cli, IMiddleware } from '../src/Tool.ts';
 
 import * as cliErrors from '../src/errors/cliErrors.ts';
 import { lex, LexemeType } from '../src/Lexer.ts';
@@ -89,17 +90,22 @@ cli.addCommand(
     .setHandler((args) => {})
     .build(),
 );
+const middleware: IMiddleware = {
+  pattern: / help /,
+  handler: (lexemes: ILexeme[]) => {
+    const toHelpCmds = lexemes.filter((lexeme) => {
+      return lexeme.type === LexemeType.COMMAND;
+    }).map((cmd) => cmd.content);
+    console.log(`Find commands ${toHelpCmds} `);
+    return true;
+  },
+};
+
+cli.use(middleware);
 
 try {
-  console.log(cli.getValidCommandChain(lex([
-    '--to',
-    'a@mail.ru',
-    'Hello',
-    '--noResponse',
-    'email',
-    'send',
-    'email',
-  ], cli)));
+  cli
+    .execute`email send --to help a@mail.ru "Hello world" --noResponse`;
 } catch (e) {
   console.log(e);
 }

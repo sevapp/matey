@@ -12,24 +12,37 @@ export interface ILexeme {
   content: string;
 }
 
-function isCommand(term: string, cli: Cli): boolean {
+function isCommand<valueType>(
+  term: string,
+  cli: Cli<valueType>,
+): boolean {
   return cli.knownLexemes.knownCommands.some((key) => key === term);
 }
 
-function isOption(term: string, cli: Cli): boolean {
+function isOption<valueType>(
+  term: string,
+  cli: Cli<valueType>,
+): boolean {
   return cli.knownLexemes.knownOptions.some((key) => key === term);
 }
 
-function isFlag(term: string, cli: Cli): boolean {
+function isFlag<valueType>(
+  term: string,
+  cli: Cli<valueType>,
+): boolean {
   return cli.knownLexemes.knownFlags.some((key) => key === term);
 }
 
-export function lex(source: string | string[], cli: Cli): ILexeme[] {
+export function lex<valueType>(
+  source: string | string[],
+  cli: Cli<valueType>,
+): ILexeme[] {
   const lexemes: ILexeme[] = [];
   const quotesAvoidRegExp = /[^\s"']+|"([^"]*)"|'([^']*)'/g;
   const tokens = Array.isArray(source)
     ? source
     : source.match(quotesAvoidRegExp);
+  // const tokens = source;
   if (tokens === null) {
     throw new errors.InvalidSourceError();
   }

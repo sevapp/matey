@@ -5,17 +5,16 @@ import defaultValidator from './defaultValidator.ts';
 import { DuplicateMiddlewareError } from './errors/mod.ts';
 
 import { ArgumentType, defaultValueType } from './Argument.ts';
-import { ILexeme, LexemeType } from './Lexer.ts';
+import { ILexeme, lex, LexemeType } from './Lexer.ts';
 import {
   addToKnownLexemes,
   isChildCommand,
 } from './helpers/toolHelper.ts';
 
-interface IMiddleware<valueType = defaultValueType> {
+export interface IMiddleware {
   pattern: RegExp;
   handler: (
-    commands: ICliCommand<valueType>[],
-    parsedArgs: HandlerArgs,
+    lexemes: ILexeme[],
   ) => boolean;
 }
 
@@ -27,7 +26,7 @@ interface IKnownLexemes {
 
 export class Cli<valueType = defaultValueType> {
   private validator: Validator;
-  private middlewares: IMiddleware<valueType>[] = [];
+  private middlewares: IMiddleware[] = [];
 
   public knownLexemes: IKnownLexemes = {
     knownCommands: [],
@@ -55,7 +54,7 @@ export class Cli<valueType = defaultValueType> {
     this.commands.push(command);
   }
 
-  public use(middleware: IMiddleware<valueType>): void {
+  public use(middleware: IMiddleware): void {
     const alreadyExists = this.middlewares.some((key) => {
       key.pattern === middleware.pattern;
     });
@@ -89,6 +88,42 @@ export class Cli<valueType = defaultValueType> {
     return commandTree.filter((value) =>
       value !== null
     ) as ICliCommand<valueType>[];
+  }
+
+  runMiddlewares(processedSource: string): [boolean, string] {
+    const lexemes = lex(processedSource, this);
+    let allHandlersReturnedTrue = true;
+    for (let i = 0; i < this.middlewares.length; i++) {
+      const middleware = this.middlewares[i];
+      if (middleware.pattern.test(processedSource)) {
+        const handlerResult = middleware.handler(lexemes);
+        if (!handlerResult) {
+          allHandlersReturnedTrue = false;
+          break;
+        }
+
+        processedSource = processedSource.replace(
+          middleware.pattern,
+          ' ',
+        );
+
+        lexemes.splice(
+          0,
+          lexemes.length,
+          ...lex(processedSource, this),
+        );
+      }
+    }
+    return [allHandlersReturnedTrue, processedSource];
+  }
+
+  execute(rawSource: TemplateStringsArray | string): void {
+    const [allHandlersReturnedTrue, processedSource] = this
+      .runMiddlewares(rawSource.toString());
+    if (!allHandlersReturnedTrue) return;
+    const lexemes = lex(processedSource, this);
+    const commandChain = this.getValidCommandChain(lexemes);
+    const command = commandChain[commandChain.length - 1];
   }
 
   // public splitSource(rawSource: string[]): ISplitSource {
