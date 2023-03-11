@@ -14,6 +14,13 @@ export class MissingArgumentError<valueType = defaultValueType>
   }
 }
 
+export class CommandNotOnStartError extends Error {
+  constructor() {
+    super(`Command must be on the start of the source.`);
+    this.name = 'CommandNotOnStartError';
+  }
+}
+
 export class NoCommandFoundError extends Error {
   constructor() {
     super(`No commands found.`);

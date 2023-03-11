@@ -1,6 +1,7 @@
 import { ArgumentType } from '../Argument.ts';
 import { ICliCommand } from '../CliCommandBuilder.ts';
 import { Cli } from '../Tool.ts';
+import * as errors from '../errors/mod.ts';
 
 export function addToKnownLexemes<valueType>(
   command: ICliCommand<valueType>,
@@ -29,4 +30,21 @@ export function isChildCommand<valueType>(
   return parentCmd.subcommands.some((key) =>
     key.name === childCmd.name
   );
+}
+
+export function prepareSource(
+  rawSource: TemplateStringsArray | string[],
+): string {
+  let source: string;
+  if (typeof rawSource === 'string') {
+    source = rawSource;
+  } else {
+    source = rawSource.join(' ');
+  }
+  const quotesAvoidRegExp = /[^\s"']+|"([^"]*)"|'([^']*)'/g;
+  const matches = source.match(quotesAvoidRegExp);
+  if (matches === null) {
+    throw new errors.InvalidSourceError();
+  }
+  return matches.join(' ');
 }

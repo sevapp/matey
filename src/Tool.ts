@@ -9,6 +9,7 @@ import { ILexeme, lex, LexemeType } from './Lexer.ts';
 import {
   addToKnownLexemes,
   isChildCommand,
+  prepareSource,
 } from './helpers/toolHelper.ts';
 
 export interface IMiddleware {
@@ -90,71 +91,43 @@ export class Cli<valueType = defaultValueType> {
     ) as ICliCommand<valueType>[];
   }
 
-  runMiddlewares(processedSource: string): [boolean, string] {
-    const lexemes = lex(processedSource, this);
+  runMiddlewares(source: string): [boolean, ILexeme[]] {
+    const lexemes = lex(source, this);
     let allHandlersReturnedTrue = true;
     for (let i = 0; i < this.middlewares.length; i++) {
       const middleware = this.middlewares[i];
-      if (middleware.pattern.test(processedSource)) {
+      if (middleware.pattern.test(source)) {
         const handlerResult = middleware.handler(lexemes);
         if (!handlerResult) {
           allHandlersReturnedTrue = false;
           break;
         }
-
-        processedSource = processedSource.replace(
-          middleware.pattern,
-          ' ',
-        );
-
-        lexemes.splice(
-          0,
-          lexemes.length,
-          ...lex(processedSource, this),
-        );
       }
     }
-    return [allHandlersReturnedTrue, processedSource];
+    return [allHandlersReturnedTrue, lexemes];
   }
 
-  execute(rawSource: TemplateStringsArray | string): void {
-    const [allHandlersReturnedTrue, processedSource] = this
-      .runMiddlewares(rawSource.toString());
-    if (!allHandlersReturnedTrue) return;
-    const lexemes = lex(processedSource, this);
+  parseArgs(lexemes: ILexeme[], source: string): void {
     const commandChain = this.getValidCommandChain(lexemes);
-    const command = commandChain[commandChain.length - 1];
+    const lastCommand = commandChain[commandChain.length - 1];
+    const commandChainNames = commandChain.map((command) =>
+      command.name
+    );
+    const commandsOnStart = source.startsWith(
+      commandChainNames.join(' '),
+    );
+    if (!commandsOnStart) {
+      throw new errors.CommandNotOnStartError();
+    }
   }
 
-  // public splitSource(rawSource: string[]): ISplitSource {
-  //   if (rawSource.length === 0) {
-  //     throw new errors.EmptySourceError();
-  //   }
-  //   const commandChain: ICliCommand[] = [];
-  //   const rawArgs: string[] = [];
-  //   let parent: ICliCommand | null = null;
-  //   let term = this.commands.find((c) => c.name === rawSource[0]);
-  //   if (term === undefined) {
-  //     throw new errors.NoCommandError(rawSource[0]);
-  //   }
-  //   let i = 0;
-  //   while (
-  //     i < rawSource.length &&
-  //     this.isChildCommand(parent, term)
-  //   ) {
-  //     commandChain.push(term as ICliCommand);
-  //     parent = term as ICliCommand;
-  //     i++;
-  //     term = commandChain[commandChain.length - 1].subcommands.find((
-  //       c,
-  //     ) => c.name === rawSource[i]);
-  //   }
-  //   rawArgs.push(...rawSource.slice(i));
-  //   return {
-  //     commandChain,
-  //     rawArgs,
-  //   };
-  // }
+  execute(rawSource: TemplateStringsArray | string[]): void {
+    const source = prepareSource(rawSource);
+    const [allHandlersReturnedTrue, lexemes] = this.runMiddlewares(
+      source,
+    );
+    if (!allHandlersReturnedTrue) return;
+  }
 
   // public parseArgs(
   //   parentCmd: ICliCommand,
