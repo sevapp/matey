@@ -14,7 +14,9 @@ export class NoCommandHandlerError extends Error {
 
 export class InvalidOptionCreateError extends Error {
   constructor() {
-    super('Argument-option must have name if it is not required');
+    super(
+      '<optionNameRequired> must be true if <required> is false',
+    );
     this.name = 'InvalidOptionCreateError';
   }
 }

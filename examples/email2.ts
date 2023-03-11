@@ -91,11 +91,13 @@ cli.addCommand(
 );
 
 try {
-  console.log(cli.getExecCommand(lex([
+  console.log(cli.getValidCommandChain(lex([
     '--to',
     'a@mail.ru',
     'Hello',
     '--noResponse',
+    'email',
+    'send',
     'email',
   ], cli)));
 } catch (e) {

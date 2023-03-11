@@ -66,7 +66,8 @@ export class Cli<valueType = defaultValueType> {
     this.middlewares.push(middleware);
   }
 
-  getExecCommand(lexemes: ILexeme[]): ICliCommand<valueType> {
+  getValidCommandChain(lexemes: ILexeme[]): ICliCommand<valueType>[] {
+    const commandTree: (ICliCommand<valueType> | null)[] = [null];
     const commands = lexemes.map((lexeme) =>
       lexeme.type === LexemeType.COMMAND
         ? this.commands.concat(this.subcommands).find(
@@ -75,18 +76,19 @@ export class Cli<valueType = defaultValueType> {
         : null
     ).filter((value) => value !== null) as ICliCommand<valueType>[];
     if (commands.length === 0) throw new errors.NoCommandFoundError();
-
-    const finalCommand = commands.reduce(
-      (parentCommand, childCommand) => {
-        if (isChildCommand<valueType>(parentCommand, childCommand)) {
-          return childCommand;
-        } else {
-          return parentCommand;
-        }
-      },
-      null as ICliCommand<valueType> | null,
-    );
-    return finalCommand === null ? commands[0] : finalCommand;
+    commands.forEach((command) => {
+      if (
+        isChildCommand<valueType>(
+          commandTree[commandTree.length - 1],
+          command,
+        )
+      ) {
+        commandTree.push(command);
+      }
+    });
+    return commandTree.filter((value) =>
+      value !== null
+    ) as ICliCommand<valueType>[];
   }
 
   // public splitSource(rawSource: string[]): ISplitSource {
