@@ -1,40 +1,4 @@
 import { ILexeme } from './../src/Lexer.ts';
-// import { defaultValueType } from './../src/Argument.ts';
-// import { CliCommandBuilder } from '../src/CliCommandBuilder.ts';
-// import { ArgumentType } from '../src/Argument.ts';
-// const mail: Record<string, string[]> = {};
-
-// enum myValueTypes {
-//   aaa,
-//   bbb,
-//   ccc,
-// }
-
-// const sendCmd = new CliCommandBuilder<myValueTypes>()
-//   .setName('send')
-//   .setDescription('Send @msg to @to')
-//   .addArgument({
-//     name: 'to',
-//     description: 'Recipient email',
-//     type: ArgumentType.OPTION,
-//     valueType: myValueTypes.aaa,
-//     optionNameRequired: true,
-//     required: true,
-//   })
-//   .addArgument({
-//     name: 'msg',
-//     description: 'Message to send',
-//     type: ArgumentType.OPTION,
-//     valueType: defaultValueType.DATA,
-//     required: true,
-//   })
-//   .addArgument({
-//     name: 'noResponse',
-//     description: 'Write  if you don\'t want to get response',
-//     type: ArgumentType.FLAG,
-//     required: false,
-//   })
-//   .build();
 
 import { ArgumentType, defaultValueType } from './../src/Argument.ts';
 import {
@@ -78,12 +42,12 @@ cli.addCommand(
           valueType: defaultValueType.DATA,
           required: true,
         })
-        // .addArgument({
-        //   name: '--noResponse',
-        //   description: 'Write  if you don\'t want to get response',
-        //   type: ArgumentType.FLAG,
-        //   required: false,
-        // })
+        .addArgument({
+          name: '--noResponse',
+          description: 'Write  if you don\'t want to get response',
+          type: ArgumentType.FLAG,
+          required: false,
+        })
         .setHandler((args) => {})
         .build(),
     )
@@ -97,7 +61,7 @@ const middleware: IMiddleware = {
       return lexeme.type === LexemeType.COMMAND;
     }).map((cmd) => cmd.content);
     console.log(`Find commands ${toHelpCmds} `);
-    return true;
+    return false;
   },
 };
 
@@ -105,7 +69,7 @@ cli.use(middleware);
 
 try {
   cli
-    .execute`email  --to a@mail.ru send "Hello world" --noResponse`;
+    .execute`email send   --to a@mail.ru  "Hello world" --noResponse`;
 } catch (e) {
   console.log(e);
 }

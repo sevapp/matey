@@ -20,7 +20,8 @@ export class Validator<
     if (enumType) {
       this.validators = {} as ValidatorsMap<valueType>;
       for (const key in enumType) {
-        this.validators[enumType[key]] = () => true;
+        this.validators[enumType[key] as keyof valueType] = () =>
+          true;
       }
     }
   }
@@ -33,11 +34,11 @@ export class Validator<
   }
 
   public validate(
-    type: valueType[keyof valueType],
+    type: valueType[keyof valueType] | defaultValueType,
     data: string,
   ): boolean {
     const typeKey = Object.keys(this.validators).find(
-      (key) => this.validators[key as keyof valueType] === type,
+      (key) => key as keyof valueType === type,
     );
 
     if (!typeKey) {

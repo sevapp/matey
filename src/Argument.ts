@@ -1,13 +1,13 @@
 export enum defaultValueType {
-  DATA,
-  EMAIL,
-  NUMBER,
-  UUID,
-  IP,
-  URL,
-  PHONE,
-  TIME,
-  FILENAME,
+  DATA = 'DATA',
+  EMAIL = 'EMAIL',
+  NUMBER = 'NUMBER',
+  UUID = 'UUID',
+  IP = 'IP',
+  URL = 'URL',
+  PHONE = 'PHONE',
+  TIME = 'TIME',
+  FILENAME = 'FILENAME',
 }
 
 export enum ArgumentType {
@@ -24,7 +24,7 @@ export interface ICommandArgument<valueType> {
   name: string;
   description: string;
   type: ArgumentType;
-  valueType: defaultValueType | valueType | defaultValueType.DATA;
+  valueType?: defaultValueType | valueType[keyof valueType];
   optionNameRequired?: boolean;
   required: boolean;
 }

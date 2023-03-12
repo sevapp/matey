@@ -1,5 +1,4 @@
 import { defaultValueType } from './../Argument.ts';
-import { ValueExamples } from '../Validator.ts';
 import { ICliCommand } from '../CliCommandBuilder.ts';
 
 export class MissingArgumentError<valueType = defaultValueType>
@@ -94,17 +93,24 @@ export class ExtraArgumentError<valueType = defaultValueType>
   }
 }
 
-export class ArgumentValidError extends Error {
-  constructor(
-    value: string,
-    option: { name: string; type: string },
-    validResult?: ValueExamples | null,
-  ) {
-    super(
-      `Invalid value "${value}" for option <${option.name}>.\nOption value type must be: ${option.type}\nExmaples: ${
-        validResult ? validResult : 'No infomatoin about valid values'
-      }`,
-    );
-    this.name = 'ArgumentValidError';
+// export class ArgumentValidError extends Error {
+//   constructor(
+//     value: string,
+//     option: { name: string; type: string },
+//     validResult?: ValueExamples | null,
+//   ) {
+//     super(
+//       `Invalid value "${value}" for option <${option.name}>.\nOption value type must be: ${option.type}\nExmaples: ${
+//         validResult ? validResult : 'No infomatoin about valid values'
+//       }`,
+//     );
+//     this.name = 'ArgumentValidError';
+//   }
+// }
+
+export class TooManyArgumentsError extends Error {
+  constructor() {
+    super(`Too many arguments.`);
+    this.name = 'TooManyArgumentsError';
   }
 }

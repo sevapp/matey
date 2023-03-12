@@ -4,7 +4,11 @@ import * as errors from './errors/mod.ts';
 import defaultValidator from './defaultValidator.ts';
 import { DuplicateMiddlewareError } from './errors/mod.ts';
 
-import { ArgumentType, defaultValueType } from './Argument.ts';
+import {
+  ArgumentType,
+  defaultValueType,
+  ICommandArgument,
+} from './Argument.ts';
 import {
   ILexeme,
   lex,
@@ -112,7 +116,7 @@ export class Cli<valueType = defaultValueType> {
     return [allHandlersReturnedTrue, lexemes];
   }
 
-  parseArgs(lexemes: ILexeme[], source: string): void {
+  parseArgs(lexemes: ILexeme[], source: string): HandlerArgs {
     const commandChain = this.getValidCommandChain(lexemes);
     const lastCommand = commandChain[commandChain.length - 1];
     const commandChainNames = commandChain.map((command) =>
@@ -135,6 +139,7 @@ export class Cli<valueType = defaultValueType> {
       arg.required
     );
     let requiredArgsGrabbed = 0;
+    let waitingForValue: ICommandArgument<valueType> | null = null;
     lexemes.forEach((lexeme, index) => {
       if (lexeme.type === LexemeType.OPTION) {
         const option = lastCommand.arguments?.find((arg) =>
@@ -143,19 +148,61 @@ export class Cli<valueType = defaultValueType> {
         if (option === undefined) {
           throw new errors.UnknownOptionError(lexeme.content);
         }
-        if (option.required) {
-          const possibleValue = args.indexOf(
-            lexemes[index + 1].content,
+        waitingForValue = option;
+      } else if (lexeme.type === LexemeType.FLAG) {
+        const flag = lastCommand.arguments?.find((arg) =>
+          arg.name === lexeme.content
+        );
+        if (flag === undefined) {
+          throw new errors.UnknownFlagError(lexeme.content);
+        }
+        parsedArgs[flag.name] = true;
+        flag.required && requiredArgsGrabbed++;
+      } else if (lexeme.type === LexemeType.MAYBE_VALUE) {
+        if (waitingForValue !== null) {
+          const possibleValue = lexeme.content;
+          const valueType = waitingForValue.valueType;
+          const isValidValue = this.validator.validate(
+            waitingForValue.valueType as defaultValueType,
+            possibleValue,
           );
-          const valueType = option.valueType;
-          //   const isValidValue = this.validator.validate(
-          //     option.valueType,
-          //     ,
-          //     possibleValue,
-          //   );
+          if (!isValidValue) {
+            throw new errors.InvalidValueError(
+              possibleValue,
+              valueType as defaultValueType,
+            );
+          }
+          parsedArgs[waitingForValue.name] = possibleValue;
+          waitingForValue.required && requiredArgsGrabbed++;
+          waitingForValue = null;
+        } else {
+          if (
+            requiredArgs === undefined ||
+            requiredArgsGrabbed > requiredArgs.length
+          ) {
+            throw new errors.TooManyArgumentsError();
+          }
+          const possibleValue = lexeme.content;
+          const valueType =
+            requiredArgs[requiredArgsGrabbed].valueType;
+          const isValidValue = this.validator.validate(
+            requiredArgs[requiredArgsGrabbed]
+              .valueType as defaultValueType,
+            possibleValue,
+          );
+          if (!isValidValue) {
+            throw new errors.InvalidValueError(
+              possibleValue,
+              valueType as defaultValueType,
+            );
+          }
+          parsedArgs[requiredArgs[requiredArgsGrabbed].name] =
+            possibleValue;
+          requiredArgsGrabbed++;
         }
       }
     });
+    return parsedArgs;
   }
 
   execute(rawSource: TemplateStringsArray | string[]): void {
@@ -164,140 +211,6 @@ export class Cli<valueType = defaultValueType> {
       source,
     );
     if (!allHandlersReturnedTrue) return;
-    this.parseArgs(lexemes, source);
+    console.log(this.parseArgs(lexemes, source));
   }
-
-  // public parseArgs(
-  //   parentCmd: ICliCommand,
-  //   rawArgs: string[],
-  // ): HandlerArgs {
-  //   if (parentCmd.arguments?.length === 0) return null;
-  //   const parsedArgs: HandlerArgs = {};
-  //   const requiredArgs = parentCmd.arguments
-  //     .filter((arg) => arg.required);
-  //   let index = 0;
-  //   let requiredArgsCount = 0;
-  //   while (index < rawArgs.length) {
-  //     const term = rawArgs[index];
-  //     const isTermOption = term.startsWith('--') ||
-  //       term.startsWith('-');
-  //     if (isTermOption) {
-  //       const option = parentCmd.arguments.find((arg) =>
-  //         arg.prefixName === term
-  //       );
-  //       if (option === undefined) {
-  //         throw new errors.UnknownOptionError(term);
-  //       }
-  //       if (option.type === 'flag') {
-  //         parsedArgs[option.name] = true;
-  //         index++;
-  //       } else {
-  //         if (option.required) requiredArgsCount++;
-  //         const value = rawArgs[index + 1];
-  //         if (value === undefined) {
-  //           throw new errors.MissingValueError(option);
-  //         }
-
-  //         const isValid = this.validator.validate(
-  //           option.type,
-  //           value,
-  //         );
-  //         if (!isValid) {
-  //           const validResult = this.validator.getExamples(
-  //             option.type,
-  //           );
-  //           throw new errors.ArgumentValidError(
-  //             value,
-  //             option,
-  //             validResult,
-  //           );
-  //         }
-  //         parsedArgs[option.name] = value;
-  //         index += 2;
-  //       }
-  //     } else {
-  //       if (requiredArgsCount === requiredArgs.length) {
-  //         throw new errors.ExtraOptionalArgumentError(term);
-  //       }
-  //       const isValid = this.validator.validate(
-  //         requiredArgs[requiredArgsCount].type,
-  //         term,
-  //       );
-  //       if (!isValid) {
-  //         const validResult = this.validator.getExamples(
-  //           requiredArgs[requiredArgsCount].type,
-  //         );
-  //         throw new errors.ArgumentValidError(
-  //           term,
-  //           requiredArgs[requiredArgsCount],
-  //           validResult,
-  //         );
-  //       }
-  //       parsedArgs[requiredArgs[requiredArgsCount].name] = term;
-  //       index++;
-  //       requiredArgsCount++;
-  //     }
-  //   }
-  //   if (requiredArgsCount < requiredArgs.length) {
-  //     throw new errors.MissingRequiredArgsError(
-  //       requiredArgs,
-  //       parentCmd,
-  //       requiredArgsCount,
-  //     );
-  //   }
-  //   return parsedArgs;
-  // }
-
-  // public parse(
-  //   s: string | string[],
-  // ): IParsed {
-  //   const regex = /[^\s"']+|"([^"]*)"|'([^']*)'/g;
-  //   const rawSource = Array.isArray(s) ? s : s.match(regex);
-  //   if (rawSource === null) {
-  //     throw new errors.EmptySourceError();
-  //   }
-  //   const { commandChain, rawArgs } = this.splitSource(
-  //     rawSource,
-  //   );
-
-  //   const parentCmd = commandChain[commandChain.length - 1];
-  //   const parsedArgs = this.parseArgs(parentCmd, rawArgs);
-  //   return {
-  //     execCommand: parentCmd,
-  //     parsedArgs,
-  //   };
-  //   // parentCmd.handler(parsedArgs);
-  // }
-
-  // public exec(s: string | string[]) {
-  //   const rawSource = Array.isArray(s) ? s : s.split(' ');
-  //   let commandStr = rawSource.join(' ');
-  //   this.middlewares.forEach((middleware) => {
-  //     commandStr = commandStr.replace(middleware.pattern, ' ');
-  //   });
-
-  //   const { execCommand, parsedArgs } = this.parse(commandStr.trim());
-  //   let currentMiddlewareIndex = -1;
-  //   const executeMiddleware = (error?: Error) => {
-  //     currentMiddlewareIndex++;
-  //     if (
-  //       error || currentMiddlewareIndex >= this.middlewares.length
-  //     ) {
-  //       execCommand.handler(parsedArgs);
-  //     } else {
-  //       const currentMiddleware =
-  //         this.middlewares[currentMiddlewareIndex];
-  //       if (currentMiddleware.pattern.test(rawSource.join(' '))) {
-  //         currentMiddleware.handler(
-  //           [execCommand],
-  //           parsedArgs,
-  //           executeMiddleware,
-  //         );
-  //       } else {
-  //         executeMiddleware();
-  //       }
-  //     }
-  //   };
-  //   executeMiddleware();
-  // }
 }
