@@ -98,11 +98,6 @@ export class Cli<valueType = defaultValueType> {
     const finalTree = commandTree.filter((value) =>
       value !== null
     ) as ICliCommand<valueType>[];
-    if (
-      !this.commands.includes(finalTree[0])
-    ) {
-      throw new errors.UnknownMainCommandError(finalTree[0].name);
-    }
     return finalTree;
   }
 
@@ -124,6 +119,11 @@ export class Cli<valueType = defaultValueType> {
 
   parseArgs(lexemes: ILexeme[], source: string): HandlerArgs {
     const commandChain = this.getValidCommandChain(lexemes);
+    if (
+      !this.commands.includes(commandChain[0])
+    ) {
+      throw new errors.UnknownMainCommandError(commandChain[0].name);
+    }
     const lastCommand = commandChain[commandChain.length - 1];
     const commandChainNames = commandChain.map((command) =>
       command.name
@@ -148,6 +148,9 @@ export class Cli<valueType = defaultValueType> {
     let waitingForValue: ICommandArgument<valueType> | null = null;
     lexemes.forEach((lexeme, index) => {
       if (lexeme.type === LexemeType.OPTION) {
+        if (waitingForValue !== null) {
+          throw new errors.MissingValueError(waitingForValue.name);
+        }
         const option = lastCommand.arguments?.find((arg) =>
           arg.name === lexeme.content
         );
@@ -156,6 +159,9 @@ export class Cli<valueType = defaultValueType> {
         }
         waitingForValue = option;
       } else if (lexeme.type === LexemeType.FLAG) {
+        if (waitingForValue !== null) {
+          throw new errors.MissingValueError(waitingForValue.name);
+        }
         const flag = lastCommand.arguments?.find((arg) =>
           arg.name === lexeme.content
         );

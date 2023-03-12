@@ -29,7 +29,7 @@ cli.addCommand(
           required: true,
         })
         .addArgument({
-          name: 'msg',
+          name: '--msg',
           description: 'Message to send',
           type: ArgumentType.OPTION,
           valueType: defaultValueType.DATA,
@@ -135,6 +135,21 @@ Deno.test('[lex](email) No source ', () => {
     );
   }, errors.InvalidSourceError);
 });
+Deno.test('[lex](email) Correct detect lexemes 4 ', () => {
+  assertEquals(
+    lex(
+      'email send --to --msg Hello',
+      cli,
+    ),
+    [
+      { type: LexemeType.COMMAND, content: 'email' },
+      { type: LexemeType.COMMAND, content: 'send' },
+      { type: LexemeType.OPTION, content: '--to' },
+      { type: LexemeType.OPTION, content: '--msg' },
+      { type: LexemeType.MAYBE_VALUE, content: 'Hello' },
+    ],
+  );
+});
 
 Deno.test('[parseArgs](email) Commands are not at begin ', () => {
   assertThrows(() => {
@@ -142,7 +157,7 @@ Deno.test('[parseArgs](email) Commands are not at begin ', () => {
   }, errors.CommandNotOnStartError);
 });
 
-Deno.test('[parseArgs](email) Commands are not at begin 2', () => {
+Deno.test('[parseArgs](email) Unknown command', () => {
   assertThrows(() => {
     cli.parseArgs(lex(' --to send email', cli), ' --to send email');
   }, errors.UnknownMainCommandError);
@@ -165,6 +180,16 @@ Deno.test('[getValidCommandChain](email) Correct build command chain 2', () => {
       cli,
     )).map((cmd) => cmd.name),
     ['email'],
+  );
+});
+
+Deno.test('[getValidCommandChain](email) Correct build command chain 1', () => {
+  assertEquals(
+    cli.getValidCommandChain(lex(
+      'send email --to a@mail.ru Hello --noResponse',
+      cli,
+    )).map((cmd) => cmd.name),
+    ['send'],
   );
 });
 
@@ -199,3 +224,75 @@ Deno.test('[lex](telegram) Correct detect lexemes', () => {
     ],
   );
 });
+
+Deno.test('[parseArgs](email) Missing value detect', () => {
+  assertThrows(() => {
+    cli.parseArgs(
+      lex('email send --to --msg Hello', cli),
+      'email send --to --msg Hello',
+    );
+  }, errors.MissingValueError);
+});
+
+Deno.test('[pardeArgs](email) Validation failed', () => {
+  assertThrows(() => {
+    cli.parseArgs(
+      lex('email send --to popop --msg', cli),
+      'email send --to popop --msg',
+    );
+  }, errors.InvalidValueError);
+});
+
+Deno.test('[pardeArgs](email) Extra argument ', () => {
+  assertThrows(() => {
+    cli.parseArgs(
+      lex('email send --to a@tt.ru --msg message whoami ', cli),
+      'email send --to a@tt.ru --msg message whoami  ',
+    );
+  }, errors.TooManyArgumentsError);
+});
+
+Deno.test('[parseArgs](email) Correct parse required args without option name', () => {
+  assertEquals(
+    cli.parseArgs(
+      lex(
+        'email send a@mail.ru Hello --noResponse',
+        cli,
+      ),
+      'email send  a@mail.ru Hello --noResponse',
+    ),
+    {
+      '--to': 'a@mail.ru',
+      '--msg': 'Hello',
+      '--noResponse': true,
+    },
+  );
+});
+
+Deno.test('[parseArgs](email) Correct parse required args without option name 2', () => {
+  assertEquals(
+    cli.parseArgs(
+      lex(
+        'email send a@mail.ru Hello ',
+        cli,
+      ),
+      'email send  a@mail.ru Hello',
+    ),
+    {
+      '--to': 'a@mail.ru',
+      '--msg': 'Hello',
+    },
+  );
+});
+
+// Deno.test('[pardeArgs](email) ', () => {
+//   assertThrows(() => {
+//     cli.parseArgs(lex('', cli), '');
+//   }, errors.);
+// });
+
+// Deno.test('[pardeArgs](email) ', () => {
+//   assertThrows(() => {
+//     cli.parseArgs(lex('', cli), '');
+//   }, errors.);
+// });

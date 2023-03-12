@@ -69,7 +69,7 @@ cli.use(middleware);
 
 try {
   cli
-    .execute`email --to  send`;
+    .execute`email send --to --msg Hello`;
 } catch (e) {
   console.log(e);
 }

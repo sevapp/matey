@@ -1,17 +1,17 @@
 import { defaultValueType, ICommandArgument } from './../Argument.ts';
 import { ICliCommand } from '../CliCommandBuilder.ts';
 
-export class MissingArgumentError<valueType = defaultValueType>
-  extends Error {
-  constructor(parentCmd: ICliCommand<valueType>) {
-    super(
-      `Expected ${parentCmd.arguments?.length} arguments <${
-        parentCmd.arguments?.map((arg) => arg.name).join(',')
-      }>, received nothing.`,
-    );
-    this.name = 'MissingArgumentError';
-  }
-}
+// export class MissingArgumentError<valueType = defaultValueType>
+//   extends Error {
+//   constructor(parentCmd: ICliCommand<valueType>) {
+//     super(
+//       `Expected ${parentCmd.arguments?.length} arguments <${
+//         parentCmd.arguments?.map((arg) => arg.name).join(',')
+//       }>, received nothing.`,
+//     );
+//     this.name = 'MissingArgumentError';
+//   }
+// }
 
 export class CommandNotOnStartError extends Error {
   constructor() {
@@ -42,8 +42,8 @@ export class InvalidSourceError extends Error {
 }
 
 export class MissingValueError extends Error {
-  constructor(option: { name: string }) {
-    super(`Option <${option.name}> requires a value`);
+  constructor(optName: string) {
+    super(`Option <${optName}> requires a value`);
     this.name = 'MissingValueError';
   }
 }
@@ -111,7 +111,7 @@ export class ExtraArgumentError<valueType = defaultValueType>
 export class TooManyArgumentsError<V> extends Error {
   constructor(required: number, taken: number, cmdName: string) {
     super(
-      `Too many arguments for command <${cmdName}>. Expected ${required}, received ${taken}`,
+      `Too many arguments for command <${cmdName}>. Expected ${required}, received ${taken}\nCheck optional arguments`,
     );
     this.name = 'TooManyArgumentsError';
   }
