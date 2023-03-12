@@ -1,19 +1,14 @@
-import { ArgumentType, defaultValueType } from './../src/Argument.ts';
 import {
+  ArgumentType,
   assertEquals,
   assertThrows,
-} from 'https://deno.land/std@0.177.0/testing/asserts.ts';
-import { CliCommandBuilder } from '../src/CliCommandBuilder.ts';
-import { Cli } from '../src/Tool.ts';
-
+  Cli,
+  CliCommandBuilder,
+  defaultValueType,
+  lex,
+  LexemeType,
+} from './mod.ts';
 import * as errors from '../src/errors/mod.ts';
-import { lex, LexemeType } from '../src/Lexer.ts';
-
-enum myValueTypes {
-  myUUID,
-  myEmail,
-  myPassword,
-}
 
 const cli = new Cli<defaultValueType>();
 
@@ -85,80 +80,115 @@ cli.addCommand(telegram);
 
 Deno.test('[lex](email) Correct detect lexemes', () => {
   assertEquals(
-    lex([
-      'email',
-      'send',
-      '--to',
-      'a@mail.ru',
-      'Hello',
-      '--noResponse',
-    ], cli),
+    lex(
+      'email send --to a@mail.ru \'Hello\' --noResponse',
+      cli,
+    ),
     [
       { type: LexemeType.COMMAND, content: 'email' },
       { type: LexemeType.COMMAND, content: 'send' },
       { type: LexemeType.OPTION, content: '--to' },
       { type: LexemeType.MAYBE_VALUE, content: 'a@mail.ru' },
-      { type: LexemeType.MAYBE_VALUE, content: 'Hello' },
+      { type: LexemeType.MAYBE_VALUE, content: '\'Hello\'' },
       { type: LexemeType.FLAG, content: '--noResponse' },
     ],
   );
 });
 
+Deno.test('[lex](email) Correct detect lexemes 2', () => {
+  assertEquals(
+    lex(
+      'email send telegram send --to --to ololo --noResponse',
+      cli,
+    ),
+    [
+      { type: LexemeType.COMMAND, content: 'email' },
+      { type: LexemeType.COMMAND, content: 'send' },
+      { type: LexemeType.COMMAND, content: 'telegram' },
+      { type: LexemeType.COMMAND, content: 'send' },
+      { type: LexemeType.OPTION, content: '--to' },
+      { type: LexemeType.OPTION, content: '--to' },
+      { type: LexemeType.MAYBE_VALUE, content: 'ololo' },
+      { type: LexemeType.FLAG, content: '--noResponse' },
+    ],
+  );
+});
+
+Deno.test('[lex](email) Correct detect lexemes 3', () => {
+  assertEquals(
+    lex(
+      '--noResponse --to --msg',
+      cli,
+    ),
+    [
+      { type: LexemeType.FLAG, content: '--noResponse' },
+      { type: LexemeType.OPTION, content: '--to' },
+      { type: LexemeType.OPTION, content: '--msg' },
+    ],
+  );
+});
+
+Deno.test('[lex](email) No source ', () => {
+  assertThrows(() => {
+    cli.getValidCommandChain(
+      lex('', cli),
+    );
+  }, errors.InvalidSourceError);
+});
+
+Deno.test('[parseArgs](email) Commands are not at begin ', () => {
+  assertThrows(() => {
+    cli.parseArgs(lex('email  --to send', cli), 'email --to send');
+  }, errors.CommandNotOnStartError);
+});
+
+Deno.test('[parseArgs](email) Commands are not at begin 2', () => {
+  assertThrows(() => {
+    cli.parseArgs(lex(' --to send email', cli), ' --to send email');
+  }, errors.UnknownMainCommandError);
+});
+
 Deno.test('[getValidCommandChain](email) Correct build command chain 1', () => {
   assertEquals(
-    cli.getValidCommandChain(lex([
-      'email',
-      'send',
-      '--to',
-      'a@mail.ru',
-      'Hello',
-      '--noResponse',
-    ], cli)).map((cmd) => cmd.name),
+    cli.getValidCommandChain(lex(
+      'email send --to a@mail.ru Hello --noResponse',
+      cli,
+    )).map((cmd) => cmd.name),
     ['email', 'send'],
   );
 });
 
 Deno.test('[getValidCommandChain](email) Correct build command chain 2', () => {
   assertEquals(
-    cli.getValidCommandChain(lex([
-      'email',
-      'ololo',
-    ], cli)).map((cmd) => cmd.name),
-    ['email'],
-  );
-});
-
-Deno.test('[getValidCommandChain](email) Correct build command chain 2', () => {
-  assertEquals(
-    cli.getValidCommandChain(lex([
-      'email',
-      'ololo',
-    ], cli)).map((cmd) => cmd.name),
+    cli.getValidCommandChain(lex(
+      'email ololo',
+      cli,
+    )).map((cmd) => cmd.name),
     ['email'],
   );
 });
 
 Deno.test('[getValidCommandChain](email) No commands detect ', () => {
   assertThrows(() => {
-    cli.getValidCommandChain(lex([
-      '--to',
-      'amail.ru',
-      'Hello',
-      '--noResponse',
-    ], cli));
+    cli.getValidCommandChain(
+      lex('--to amail.ru Hello --noResponse', cli),
+    );
   }, errors.NoCommandFoundError);
 });
 
 Deno.test('[lex](telegram) Correct detect lexemes', () => {
   assertEquals(
-    lex([
-      'telegram',
-      'send',
-      '--tgID',
-      '12345',
-      '--msg',
-      'ololo',
-    ], cli),
+    lex(
+      [
+        'telegram',
+        'send',
+        '--tgID',
+        '12345',
+        '--msg',
+        'ololo',
+      ].join(' '),
+      cli,
+    ),
     [
       { type: LexemeType.COMMAND, content: 'telegram' },
       { type: LexemeType.COMMAND, content: 'send' },

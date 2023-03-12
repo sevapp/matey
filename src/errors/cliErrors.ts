@@ -1,4 +1,4 @@
-import { defaultValueType } from './../Argument.ts';
+import { defaultValueType, ICommandArgument } from './../Argument.ts';
 import { ICliCommand } from '../CliCommandBuilder.ts';
 
 export class MissingArgumentError<valueType = defaultValueType>
@@ -108,9 +108,20 @@ export class ExtraArgumentError<valueType = defaultValueType>
 //   }
 // }
 
-export class TooManyArgumentsError extends Error {
-  constructor() {
-    super(`Too many arguments.`);
+export class TooManyArgumentsError<V> extends Error {
+  constructor(required: number, taken: number, cmdName: string) {
+    super(
+      `Too many arguments for command <${cmdName}>. Expected ${required}, received ${taken}`,
+    );
     this.name = 'TooManyArgumentsError';
+  }
+}
+
+export class UnknownMainCommandError extends Error {
+  constructor(cmdName: string) {
+    super(
+      `Unknown main command <${cmdName}>. Use "help" to see available commands.`,
+    );
+    this.name = 'UnknownMainCommandError';
   }
 }

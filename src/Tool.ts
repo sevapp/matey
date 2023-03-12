@@ -95,9 +95,15 @@ export class Cli<valueType = defaultValueType> {
         commandTree.push(command);
       }
     });
-    return commandTree.filter((value) =>
+    const finalTree = commandTree.filter((value) =>
       value !== null
     ) as ICliCommand<valueType>[];
+    if (
+      !this.commands.includes(finalTree[0])
+    ) {
+      throw new errors.UnknownMainCommandError(finalTree[0].name);
+    }
+    return finalTree;
   }
 
   runMiddlewares(source: string): [boolean, ILexeme[]] {
@@ -178,9 +184,14 @@ export class Cli<valueType = defaultValueType> {
         } else {
           if (
             requiredArgs === undefined ||
-            requiredArgsGrabbed > requiredArgs.length
+            requiredArgsGrabbed >= requiredArgs.length
           ) {
-            throw new errors.TooManyArgumentsError();
+            throw new errors.TooManyArgumentsError(
+              requiredArgs?.length || 0,
+              args.length,
+              lastCommand.name,
+            );
+            // throw new errors.TooManyArgumentsError(requiredArgs, args.length);
           }
           const possibleValue = lexeme.content;
           const valueType =

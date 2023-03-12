@@ -69,7 +69,7 @@ cli.use(middleware);
 
 try {
   cli
-    .execute`email send   --to a@mail.ru  "Hello world" --noResponse`;
+    .execute`email --to  send`;
 } catch (e) {
   console.log(e);
 }
