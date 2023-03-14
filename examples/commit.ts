@@ -24,7 +24,7 @@ cli.addCommand(
             'OpenAI model to use for generating commit message',
           type: ArgumentType.OPTION,
           valueValidator: (data: string) =>
-            ['davinci', 'curie', 'babbage'].includes(data),
+            ['gpt-3.5-turbo'].includes(data),
           optionNameRequired: true,
           required: true,
         })
@@ -36,13 +36,30 @@ cli.addCommand(
           optionNameRequired: true,
           required: true,
         })
+        .addArgument({
+          name: '--short',
+          description: 'Generate short commit message',
+          type: ArgumentType.FLAG,
+          required: false,
+        })
         .setHandler(async (args) => {
           if (
             args !== null && args['--model'] && args['--maxTokens']
           ) {
-            //TODO
+            let {
+              '--model': model,
+              '--maxTokens': maxTokens,
+              '--short': short,
+            } = args;
             const diff = await (await shelly('git diff')).stdout;
-            const commitMessage = await generateCommit(diff);
+            if (short) {
+              maxTokens = '10';
+            }
+            const commitMessage = await generateCommit(
+              diff,
+              model as string,
+              parseInt(maxTokens as string, 10)!,
+            );
             console.log(commitMessage);
           }
         })
@@ -66,7 +83,11 @@ const middleware: IMiddleware = {
 cli.use(middleware);
 
 try {
-  cli.execute`commit generate --model davinci --maxTokens 50`;
+  // await cli
+  //   .execute`commit generate  --model gpt-3.5-turbo --maxTokens 50 --short`;
+  // cli.execute`commit generate help`;
+  await cli
+    .execute`commit generate  --model gpt-3.5-turbo --maxTokens 50`;
 } catch (e) {
   console.log(e);
 }

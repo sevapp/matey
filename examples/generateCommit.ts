@@ -1,7 +1,8 @@
-import { shelly } from 'https://deno.land/x/shelly@v0.1.1/mod.ts';
-
+import 'https://deno.land/std@0.179.0/dotenv/load.ts';
 export async function generateCommit(
   changes: string,
+  model: string,
+  maxTokens: number,
 ): Promise<string> {
   const apiKey = Deno.env.get('OPENAI_API_KEY');
   const prompt =
@@ -21,9 +22,9 @@ export async function generateCommit(
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        'model': 'gpt-3.5-turbo',
+        'model': model,
         'messages': [{ 'role': 'user', 'content': prompt }],
-        'max_tokens': 30,
+        'max_tokens': maxTokens,
       }),
     },
   );
@@ -31,14 +32,3 @@ export async function generateCommit(
   //   console.log(data);
   return data.choices[0].message.content;
 }
-
-// // основная функция, которая вызывается при запуске скрипта
-// async function main() {
-//   const changes = (await shelly(`git diff`)).stdout;
-//   const commitMessage = await generateCommit(changes);
-//   //   await executeCommand(`git commit -m "${commitMessage}"`);
-//   console.log(commitMessage);
-// }
-
-// // вызов основной функции
-// await main();

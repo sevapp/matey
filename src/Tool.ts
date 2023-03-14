@@ -124,7 +124,7 @@ export class Cli {
     const lexemeArgs = lexemes.filter((lexeme) => {
       return lexeme.type !== LexemeType.COMMAND;
     });
-    const parsedArgs: parsedArgs = [{}, null];
+    const parsedArgs: parsedArgs = [{}, lastCommand];
     const requiredArgs = lastCommand.arguments?.filter((arg) =>
       arg.required
     );
