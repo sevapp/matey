@@ -4,13 +4,28 @@ import {
   assertThrows,
   Cli,
   CliCommandBuilder,
-  defaultValueType,
   lex,
   LexemeType,
 } from './mod.ts';
 import * as errors from '../src/errors/mod.ts';
+import { Validator } from '../src/Validator.ts';
 
-const cli = new Cli<defaultValueType>();
+const enum defaultValueType {
+  GREETING = 'GREETING',
+  MAILRU = 'MAILRU',
+}
+
+const myValidator = new Validator<defaultValueType extends Record<string, any>>();
+myValidator.addValidator(defaultValueType.GREETING, (value) => {
+  return /^Hello/.test(value);
+});
+
+myValidator.addValidator(defaultValueType.MAILRU, (value) => {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+mail\.ru$/
+    .test(value);
+});
+
+const cli = new Cli<defaultValueType>(myValidator);
 
 cli.addCommand(
   new CliCommandBuilder<defaultValueType>()
@@ -269,14 +284,18 @@ Deno.test('[parseArgs](email) Correct parse required args without option name', 
   );
 });
 
-// Deno.test('[pardeArgs](email) ', () => {
-//   assertThrows(() => {
-//     cli.parseArgs(lex('', cli), '');
-//   }, errors.);
-// });
-
-// Deno.test('[pardeArgs](email) ', () => {
-//   assertThrows(() => {
-//     cli.parseArgs(lex('', cli), '');
-//   }, errors.);
-// });
+Deno.test('[parseArgs](email) Correct parse required args without option name 2', () => {
+  assertEquals(
+    cli.parseArgs(
+      lex(
+        'email send a@mail.ru Hello ',
+        cli,
+      ),
+      'email send  a@mail.ru Hello',
+    ),
+    {
+      '--to': 'a@mail.ru',
+      '--msg': 'Hello',
+    },
+  );
+});
