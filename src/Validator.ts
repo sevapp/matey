@@ -1,54 +1,22 @@
-import { defaultValueType } from './Argument.ts';
-import * as errors from './errors/validationErrors.ts';
+export type IValidationFunction = (data: string) => boolean;
 
-type ValidatorsMap<valueType> = {
-  [key in keyof valueType]: ValidationFunction<valueType>;
-};
+export class Validator {
+  validators: Map<string, (data: string) => boolean>;
 
-type ValidationFunction<valueType> = (
-  data: keyof valueType,
-) => boolean;
-
-export class Validator<
-  valueType extends Record<string, any> = typeof defaultValueType,
-> {
-  private validators: ValidatorsMap<valueType> = {} as ValidatorsMap<
-    valueType
-  >;
-
-  constructor(enumType?: valueType) {
-    if (enumType) {
-      this.validators = {} as ValidatorsMap<valueType>;
-      for (const key in enumType) {
-        this.validators[enumType[key] as keyof valueType] = () =>
-          true;
-      }
-    }
+  constructor() {
+    this.validators = new Map<string, IValidationFunction>();
   }
 
-  public addValidator(
-    type: keyof valueType,
-    validator: ValidationFunction<valueType>,
-  ): void {
-    this.validators[type] = validator;
+  addValidator(type: string, validator: IValidationFunction) {
+    this.validators.set(type, validator);
   }
 
-  public validate(
-    type: valueType[keyof valueType] | defaultValueType,
-    data: string,
-  ): boolean {
-    const typeKey = Object.keys(this.validators).find(
-      (key) => key as keyof valueType === type,
-    );
-
-    if (!typeKey) {
-      throw new errors.NoValidatorError(
-        `No validator found for type ${type}`,
-      );
+  getValidator(type: string): IValidationFunction {
+    const validator = this.validators.get(type);
+    if (validator) {
+      return validator;
+    } else {
+      throw new Error(`Validator not found for type ${type}`);
     }
-
-    const validFunc = this.validators[typeKey];
-
-    return validFunc(data);
   }
 }

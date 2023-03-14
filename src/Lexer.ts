@@ -1,5 +1,5 @@
 import * as errors from './errors/mod.ts';
-import { Cli } from './Tool.ts';
+import { Cli } from './mod.ts';
 export enum LexemeType {
   COMMAND,
   OPTION,
@@ -12,23 +12,23 @@ export interface ILexeme {
   content: string;
 }
 
-function isCommand<valueType>(
+function isCommand(
   term: string,
-  cli: Cli<valueType>,
+  cli: Cli,
 ): boolean {
   return cli.knownLexemes.knownCommands.some((key) => key === term);
 }
 
-function isOption<valueType>(
+function isOption(
   term: string,
-  cli: Cli<valueType>,
+  cli: Cli,
 ): boolean {
   return cli.knownLexemes.knownOptions.some((key) => key === term);
 }
 
-function isFlag<valueType>(
+function isFlag(
   term: string,
-  cli: Cli<valueType>,
+  cli: Cli,
 ): boolean {
   return cli.knownLexemes.knownFlags.some((key) => key === term);
 }
@@ -42,9 +42,9 @@ export function quoteAvoidSplit(source: string): string[] {
   return matches;
 }
 
-export function lex<valueType>(
+export function lex(
   source: string,
-  cli: Cli<valueType>,
+  cli: Cli,
 ): ILexeme[] {
   const lexemes: ILexeme[] = [];
   const tokens = quoteAvoidSplit(source);

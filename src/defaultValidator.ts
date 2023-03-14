@@ -1,6 +1,18 @@
-import { Validator } from './Validator.ts';
-import { defaultValueType } from './Argument.ts';
+import { Validator } from './mod.ts';
+
 const defaultValidator = new Validator();
+
+export enum defaultValueType {
+  DATA = 'DATA',
+  EMAIL = 'EMAIL',
+  NUMBER = 'NUMBER',
+  UUID = 'UUID',
+  IP = 'IP',
+  URL = 'URL',
+  PHONE = 'PHONE',
+  TIME = 'TIME',
+  FILENAME = 'FILENAME',
+}
 
 defaultValidator.addValidator(
   defaultValueType.NUMBER,

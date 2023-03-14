@@ -1,37 +1,32 @@
-import { ILexeme } from './../src/Lexer.ts';
-
-import { ArgumentType, defaultValueType } from './../src/Argument.ts';
+import defaultValidator, {
+  defaultValueType,
+} from '../src/defaultValidator.ts';
 import {
-  assertEquals,
-  assertThrows,
-} from 'https://deno.land/std@0.177.0/testing/asserts.ts';
-import { CliCommandBuilder } from '../src/CliCommandBuilder.ts';
-import { Cli, IMiddleware } from '../src/Tool.ts';
+  ArgumentType,
+  Cli,
+  CliCommandBuilder,
+  ILexeme,
+  IMiddleware,
+  LexemeType,
+} from '../src/mod.ts';
 
-import * as cliErrors from '../src/errors/cliErrors.ts';
-import { lex, LexemeType } from '../src/Lexer.ts';
-
-enum myValueTypes {
-  myUUID,
-  myEmail,
-  myPassword,
-}
-
-const cli = new Cli<defaultValueType>();
+const cli = new Cli();
 
 cli.addCommand(
-  new CliCommandBuilder<defaultValueType>()
+  new CliCommandBuilder()
     .setName('email')
     .setDescription('Email commands')
     .addSubcommand(
-      new CliCommandBuilder<defaultValueType>()
+      new CliCommandBuilder()
         .setName('send')
         .setDescription('Send @msg to @to')
         .addArgument({
           name: '--to',
           description: 'Recipient email',
           type: ArgumentType.OPTION,
-          valueType: defaultValueType.EMAIL,
+          valueValidator: defaultValidator.getValidator(
+            defaultValueType.EMAIL,
+          ),
           optionNameRequired: true,
           required: true,
         })
@@ -39,7 +34,6 @@ cli.addCommand(
           name: 'msg',
           description: 'Message to send',
           type: ArgumentType.OPTION,
-          valueType: defaultValueType.DATA,
           required: true,
         })
         .addArgument({

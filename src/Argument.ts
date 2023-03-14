@@ -1,30 +1,16 @@
-export enum defaultValueType {
-  DATA = 'DATA',
-  EMAIL = 'EMAIL',
-  NUMBER = 'NUMBER',
-  UUID = 'UUID',
-  IP = 'IP',
-  URL = 'URL',
-  PHONE = 'PHONE',
-  TIME = 'TIME',
-  FILENAME = 'FILENAME',
-}
+import { IValidationFunction } from './mod.ts';
 
 export enum ArgumentType {
   FLAG,
   OPTION,
 }
 
-export interface IValue<valueType> {
-  data: string | null;
-  type: valueType;
-}
-
-export interface ICommandArgument<valueType> {
+export interface ICommandArgument {
   name: string;
   description: string;
   type: ArgumentType;
-  valueType?: defaultValueType | valueType[keyof valueType];
+
+  valueValidator?: IValidationFunction;
   optionNameRequired?: boolean;
   required: boolean;
 }

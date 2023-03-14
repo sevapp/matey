@@ -3,9 +3,9 @@ import { ICliCommand } from '../CliCommandBuilder.ts';
 import { Cli } from '../Tool.ts';
 import * as errors from '../errors/mod.ts';
 
-export function addToKnownLexemes<valueType>(
-  command: ICliCommand<valueType>,
-  cli: Cli<valueType>,
+export function addToKnownLexemes(
+  command: ICliCommand,
+  cli: Cli,
 ): void {
   cli.knownLexemes.knownCommands.push(command.name);
   command.arguments?.forEach((arg) => {
@@ -20,9 +20,9 @@ export function addToKnownLexemes<valueType>(
   });
 }
 
-export function isChildCommand<valueType>(
-  parentCmd: ICliCommand<valueType> | null,
-  childCmd: ICliCommand<valueType> | null,
+export function isChildCommand(
+  parentCmd: ICliCommand | null,
+  childCmd: ICliCommand | null,
 ) {
   if (childCmd === null) return false;
   if (parentCmd === null) return true;

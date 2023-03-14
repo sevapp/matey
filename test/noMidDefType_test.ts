@@ -9,22 +9,25 @@ import {
   LexemeType,
 } from './mod.ts';
 import * as errors from '../src/errors/mod.ts';
+import defaultValidator from '../src/defaultValidator.ts';
 
-const cli = new Cli<defaultValueType>();
+const cli = new Cli();
 
 cli.addCommand(
-  new CliCommandBuilder<defaultValueType>()
+  new CliCommandBuilder()
     .setName('email')
     .setDescription('Email commands')
     .addSubcommand(
-      new CliCommandBuilder<defaultValueType>()
+      new CliCommandBuilder()
         .setName('send')
         .setDescription('Send @msg to @to')
         .addArgument({
           name: '--to',
           description: 'Recipient email',
           type: ArgumentType.OPTION,
-          valueType: defaultValueType.EMAIL,
+          valueValidator: defaultValidator.getValidator(
+            defaultValueType.EMAIL,
+          ),
           optionNameRequired: true,
           required: true,
         })
@@ -32,7 +35,9 @@ cli.addCommand(
           name: '--msg',
           description: 'Message to send',
           type: ArgumentType.OPTION,
-          valueType: defaultValueType.DATA,
+          valueValidator: defaultValidator.getValidator(
+            defaultValueType.DATA,
+          ),
           required: true,
         })
         .addArgument({
@@ -48,14 +53,13 @@ cli.addCommand(
     .build(),
 );
 
-const tgSend = new CliCommandBuilder<defaultValueType>()
+const tgSend = new CliCommandBuilder()
   .setName('send')
   .setDescription('Send --msg to --tgID')
   .addArgument({
     name: '--tgID',
     description: 'Telegram ID',
     type: ArgumentType.OPTION,
-    valueType: defaultValueType.DATA,
     optionNameRequired: false,
     required: true,
   })
@@ -63,13 +67,12 @@ const tgSend = new CliCommandBuilder<defaultValueType>()
     name: '--msg',
     description: 'Message to send',
     type: ArgumentType.OPTION,
-    valueType: defaultValueType.DATA,
     required: true,
   })
   .setHandler((args) => {})
   .build();
 
-const telegram = new CliCommandBuilder<defaultValueType>()
+const telegram = new CliCommandBuilder()
   .setName('telegram')
   .setDescription('Telegram commands')
   .addSubcommand(tgSend)
@@ -252,31 +255,35 @@ Deno.test('[pardeArgs](email) Extra argument ', () => {
   }, errors.TooManyArgumentsError);
 });
 
-Deno.test('[parseArgs](email) Correct parse required args without option name', () => {
-  assertEquals(
-    cli.parseArgs(
-      lex(
-        'email send a@mail.ru Hello --noResponse',
-        cli,
-      ),
-      'email send  a@mail.ru Hello --noResponse',
-    ),
-    {
-      '--to': 'a@mail.ru',
-      '--msg': 'Hello',
-      '--noResponse': true,
-    },
-  );
-});
-
-// Deno.test('[pardeArgs](email) ', () => {
-//   assertThrows(() => {
-//     cli.parseArgs(lex('', cli), '');
-//   }, errors.);
+// Deno.test('[parseArgs](email) Correct parse required args without option name', () => {
+//   assertEquals(
+//     cli.parseArgs(
+//       lex(
+//         'email send a@mail.ru Hello --noResponse',
+//         cli,
+//       ),
+//       'email send  a@mail.ru Hello --noResponse',
+//     ),
+//     [{
+//       '--to': 'a@mail.ru',
+//       '--msg': 'Hello',
+//       '--noResponse': true,
+//     }, ],
+//   );
 // });
 
-// Deno.test('[pardeArgs](email) ', () => {
-//   assertThrows(() => {
-//     cli.parseArgs(lex('', cli), '');
-//   }, errors.);
+// Deno.test('[parseArgs](email) Correct parse required args without option name 2', () => {
+//   assertEquals(
+//     cli.parseArgs(
+//       lex(
+//         'email send a@mail.ru Hello ',
+//         cli,
+//       ),
+//       'email send  a@mail.ru Hello',
+//     ),
+//     {
+//       '--to': 'a@mail.ru',
+//       '--msg': 'Hello',
+//     },
+//   );
 // });

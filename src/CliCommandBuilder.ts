@@ -1,44 +1,46 @@
-import {
-  ArgumentType,
-  defaultValueType,
-  ICommandArgument,
-} from './Argument.ts';
+import { ArgumentType, ICommandArgument } from './Argument.ts';
 import {
   InvalidOptionCreateError,
   NoCommandHandlerError,
   NoCommandNameError,
 } from './errors/mod.ts';
 
-export type HandlerArgs = Record<string, string | boolean> | null;
+export type parsedArgs = [{
+  [key: string]: string | boolean;
+}, ICliCommand | null];
 
-export interface ICliCommand<valueType> {
+export type HandlerArgs = {
+  [key: string]: string | boolean;
+};
+
+export interface ICliCommand {
   name: string;
   description?: string;
-  arguments?: ICommandArgument<valueType>[];
-  subcommands: ICliCommand<valueType>[];
+  arguments?: ICommandArgument[];
+  subcommands: ICliCommand[];
   handler: (args: HandlerArgs) => void;
 }
 
-export class CliCommandBuilder<valueType = defaultValueType> {
+export class CliCommandBuilder {
   private name = '';
   private description = '';
-  private arguments: ICommandArgument<valueType>[] = [];
-  private subcommands: ICliCommand<valueType>[] = [];
+  private arguments: ICommandArgument[] = [];
+  private subcommands: ICliCommand[] = [];
   private handler?: (args: HandlerArgs) => void;
 
-  setName(name: string): CliCommandBuilder<valueType> {
+  setName(name: string): CliCommandBuilder {
     this.name = name;
     return this;
   }
 
-  setDescription(description: string): CliCommandBuilder<valueType> {
+  setDescription(description: string): CliCommandBuilder {
     this.description = description;
     return this;
   }
 
   addArgument(
-    argument: ICommandArgument<valueType>,
-  ): CliCommandBuilder<valueType> {
+    argument: ICommandArgument,
+  ): CliCommandBuilder {
     if (
       !argument.required && (argument.type === ArgumentType.OPTION) &&
       !argument.optionNameRequired
@@ -50,20 +52,20 @@ export class CliCommandBuilder<valueType = defaultValueType> {
   }
 
   addSubcommand(
-    subcommand: ICliCommand<valueType>,
-  ): CliCommandBuilder<valueType> {
+    subcommand: ICliCommand,
+  ): CliCommandBuilder {
     this.subcommands.push(subcommand);
     return this;
   }
 
   setHandler(
     handler: (args: HandlerArgs) => void,
-  ): CliCommandBuilder<valueType> {
+  ): CliCommandBuilder {
     this.handler = handler;
     return this;
   }
 
-  build(): ICliCommand<valueType> {
+  build(): ICliCommand {
     if (!this.name) {
       throw new NoCommandNameError();
     }

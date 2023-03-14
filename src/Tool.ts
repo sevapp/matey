@@ -1,25 +1,17 @@
-import { Validator } from './Validator.ts';
-import { HandlerArgs, ICliCommand } from './CliCommandBuilder.ts';
-import * as errors from './errors/mod.ts';
-import defaultValidator from './defaultValidator.ts';
-import { DuplicateMiddlewareError } from './errors/mod.ts';
-
-import {
-  ArgumentType,
-  defaultValueType,
-  ICommandArgument,
-} from './Argument.ts';
-import {
-  ILexeme,
-  lex,
-  LexemeType,
-  quoteAvoidSplit,
-} from './Lexer.ts';
 import {
   addToKnownLexemes,
+  HandlerArgs,
+  ICliCommand,
+  ICommandArgument,
+  ILexeme,
   isChildCommand,
+  lex,
+  LexemeType,
+  parsedArgs,
   prepareSource,
-} from './helpers/toolHelper.ts';
+  quoteAvoidSplit,
+} from './mod.ts';
+import * as errors from './errors/mod.ts';
 
 export interface IMiddleware {
   pattern: RegExp;
@@ -34,8 +26,7 @@ interface IKnownLexemes {
   knownFlags: string[];
 }
 
-export class Cli<valueType = defaultValueType> {
-  private validator: Validator;
+export class Cli {
   private middlewares: IMiddleware[] = [];
 
   public knownLexemes: IKnownLexemes = {
@@ -43,17 +34,10 @@ export class Cli<valueType = defaultValueType> {
     knownOptions: [],
     knownFlags: [],
   };
-  public commands: ICliCommand<valueType>[] = [];
-  public subcommands: ICliCommand<valueType>[] = [];
-  constructor(validator?: Validator) {
-    this.validator = validator ? validator : defaultValidator;
-  }
+  public commands: ICliCommand[] = [];
+  public subcommands: ICliCommand[] = [];
 
-  public setValidator(validator: Validator) {
-    this.validator = validator;
-  }
-
-  public addCommand(command: ICliCommand<valueType>) {
+  public addCommand(command: ICliCommand) {
     if (this.commands.some((key) => key.name === command.name)) {
       throw new Error(`Command "${command.name}" already exists.`);
     }
@@ -70,24 +54,24 @@ export class Cli<valueType = defaultValueType> {
     });
 
     if (alreadyExists) {
-      throw new DuplicateMiddlewareError(middleware.pattern);
+      throw new errors.DuplicateMiddlewareError(middleware.pattern);
     }
     this.middlewares.push(middleware);
   }
 
-  getValidCommandChain(lexemes: ILexeme[]): ICliCommand<valueType>[] {
-    const commandTree: (ICliCommand<valueType> | null)[] = [null];
+  getValidCommandChain(lexemes: ILexeme[]): ICliCommand[] {
+    const commandTree: (ICliCommand | null)[] = [null];
     const commands = lexemes.map((lexeme) =>
       lexeme.type === LexemeType.COMMAND
         ? this.commands.concat(this.subcommands).find(
           (key) => key.name === lexeme.content,
         )
         : null
-    ).filter((value) => value !== null) as ICliCommand<valueType>[];
+    ).filter((value) => value !== null) as ICliCommand[];
     if (commands.length === 0) throw new errors.NoCommandFoundError();
     commands.forEach((command) => {
       if (
-        isChildCommand<valueType>(
+        isChildCommand(
           commandTree[commandTree.length - 1],
           command,
         )
@@ -97,7 +81,7 @@ export class Cli<valueType = defaultValueType> {
     });
     const finalTree = commandTree.filter((value) =>
       value !== null
-    ) as ICliCommand<valueType>[];
+    ) as ICliCommand[];
     return finalTree;
   }
 
@@ -117,7 +101,7 @@ export class Cli<valueType = defaultValueType> {
     return [allHandlersReturnedTrue, lexemes];
   }
 
-  parseArgs(lexemes: ILexeme[], source: string): HandlerArgs {
+  parseArgs(lexemes: ILexeme[], source: string): parsedArgs {
     const commandChain = this.getValidCommandChain(lexemes);
     if (
       !this.commands.includes(commandChain[0])
@@ -140,12 +124,12 @@ export class Cli<valueType = defaultValueType> {
     const lexemeArgs = lexemes.filter((lexeme) => {
       return lexeme.type !== LexemeType.COMMAND;
     });
-    const parsedArgs: HandlerArgs = {};
+    const parsedArgs: parsedArgs = [{}, null];
     const requiredArgs = lastCommand.arguments?.filter((arg) =>
       arg.required
     );
     let requiredArgsGrabbed = 0;
-    let waitingForValue: ICommandArgument<valueType> | null = null;
+    let waitingForValue: ICommandArgument | null = null;
     lexemes.forEach((lexeme, index) => {
       if (lexeme.type === LexemeType.OPTION) {
         if (waitingForValue !== null) {
@@ -168,23 +152,22 @@ export class Cli<valueType = defaultValueType> {
         if (flag === undefined) {
           throw new errors.UnknownFlagError(lexeme.content);
         }
-        parsedArgs[flag.name] = true;
+        parsedArgs[0][flag.name] = true;
         flag.required && requiredArgsGrabbed++;
       } else if (lexeme.type === LexemeType.MAYBE_VALUE) {
         if (waitingForValue !== null) {
           const possibleValue = lexeme.content;
-          const valueType = waitingForValue.valueType;
-          const isValidValue = this.validator.validate(
-            waitingForValue.valueType as defaultValueType,
-            possibleValue,
-          );
-          if (!isValidValue) {
-            throw new errors.InvalidValueError(
+          if (waitingForValue.valueValidator) {
+            const isValidValue = waitingForValue.valueValidator(
               possibleValue,
-              valueType as defaultValueType,
             );
+            if (!isValidValue) {
+              throw new errors.InvalidValueError(
+                possibleValue,
+              );
+            }
           }
-          parsedArgs[waitingForValue.name] = possibleValue;
+          parsedArgs[0][waitingForValue.name] = possibleValue;
           waitingForValue.required && requiredArgsGrabbed++;
           waitingForValue = null;
         } else {
@@ -197,23 +180,19 @@ export class Cli<valueType = defaultValueType> {
               args.length,
               lastCommand.name,
             );
-            // throw new errors.TooManyArgumentsError(requiredArgs, args.length);
           }
           const possibleValue = lexeme.content;
-          const valueType =
-            requiredArgs[requiredArgsGrabbed].valueType;
-          const isValidValue = this.validator.validate(
-            requiredArgs[requiredArgsGrabbed]
-              .valueType as defaultValueType,
-            possibleValue,
-          );
-          if (!isValidValue) {
-            throw new errors.InvalidValueError(
-              possibleValue,
-              valueType as defaultValueType,
-            );
+          const validator =
+            requiredArgs[requiredArgsGrabbed].valueValidator;
+          if (validator) {
+            const isValidValue = validator(possibleValue);
+            if (!isValidValue) {
+              throw new errors.InvalidValueError(
+                possibleValue,
+              );
+            }
           }
-          parsedArgs[requiredArgs[requiredArgsGrabbed].name] =
+          parsedArgs[0][requiredArgs[requiredArgsGrabbed].name] =
             possibleValue;
           requiredArgsGrabbed++;
         }
@@ -228,6 +207,8 @@ export class Cli<valueType = defaultValueType> {
       source,
     );
     if (!allHandlersReturnedTrue) return;
-    console.log(this.parseArgs(lexemes, source));
+    const [parsedArgs, command] = this.parseArgs(lexemes, source);
+    if (command === null) return;
+    command.handler(parsedArgs);
   }
 }
