@@ -39,10 +39,10 @@ export class Cli {
   public subcommands: ICliCommand[] = [];
 
   /**
-Добавляет команду в список команд и устанавливает для нее новые лексемы.
-@param {ICliCommand} command - объект команды
-@throws {Error} - если команда уже существует
-  */
+   * Добавляет команду в список команд и устанавливает для нее новые лексемы.
+   * @param {ICliCommand} command - объект команды
+   * @throws {Error} - если команда уже существует
+   */
   public addCommand(command: ICliCommand) {
     if (this.commands.some((key) => key.name === command.name)) {
       throw new Error(`Command "${command.name}" already exists.`);
@@ -55,10 +55,10 @@ export class Cli {
   }
 
   /**
-Добавляет новый middleware в список middleware для обработки лексем.
-@param {IMiddleware} middleware - объект middleware, содержащий regexp-шаблон и обработчик
-@throws {DuplicateMiddlewareError} - если middleware с таким же паттерном уже существует
-  */
+   * Добавляет новый middleware в список middleware для обработки лексем.
+   * @param {IMiddleware} middleware - объект middleware, содержащий regexp-шаблон и обработчик
+   * @throws {DuplicateMiddlewareError} - если middleware с таким же паттерном уже существует
+   */
   public use(middleware: IMiddleware): void {
     const alreadyExists = this.middlewares.some((key) => {
       key.pattern === middleware.pattern;
@@ -71,11 +71,11 @@ export class Cli {
   }
 
   /**
-Получает массив валидных команд из списка лексем.
-@param {ILexeme[]} lexemes - список лексем
-@returns {ICliCommand[]} - массив валидных команд, расположенных в правильной последовательности
-@throws {NoCommandFoundError} - если не найдено ни одной команды в списке лексем
-  */
+   * Получает массив валидных команд из списка лексем.
+   * @param {ILexeme[]} lexemes - список лексем
+   * @returns {ICliCommand[]} - массив валидных команд, расположенных в правильной последовательности
+   * @throws {NoCommandFoundError} - если не найдено ни одной команды в списке лексем
+   */
   getValidCommandChain(lexemes: ILexeme[]): ICliCommand[] {
     const commandTree: (ICliCommand | null)[] = [null];
     // Получаем из лексем только команды, сохраняя их порядок
@@ -105,10 +105,10 @@ export class Cli {
   }
 
   /**
-Запускает middleware для списка лексем.
-@param {string} source - входная строка
-@returns {[boolean, ILexeme[]]} - массив, содержащий результат обработки middleware и список лексем
-  */
+   * Запускает middleware для списка лексем.
+   * @param {string} source - входная строка
+   * @returns {[boolean, ILexeme[]]} - массив, содержащий результат обработки middleware и список лексем
+   */
   runMiddlewares(source: string): [boolean, ILexeme[]] {
     const lexemes = lex(source, this);
     // allHandlersReturnedTrue - флаг, показывающий, что все middleware вернули true
@@ -127,18 +127,18 @@ export class Cli {
   }
 
   /**
-Разбирает список лексем на аргументы и создает из них объект parsedArgs.
-@param {ILexeme[]} lexemes - список лексем
-@param {string} source - входная строка
-@returns {parsedArgs} - объект parsedArgs, содержащий набор опций и флагов команды
-@throws {UnknownMainCommandError} - если первая команда не является известной
-@throws {CommandNotOnStartError} - если первая команда не находится в начале входной строки
-@throws {MissingValueError} - если не указано значение опции
-@throws {UnknownOptionError} - если указана неизвестная опция
-@throws {UnknownFlagError} - если указан неизвестный флаг
-@throws {InvalidValueError} - если указано некорректное значение для опции
-@throws {MissingArgumentError} - если не указан обязательный аргумент команды
-  */
+   * Разбирает список лексем на аргументы и создает из них объект parsedArgs.
+   * @param {ILexeme[]} lexemes - список лексем
+   * @param {string} source - входная строка
+   * @returns {parsedArgs} - объект parsedArgs, содержащий набор опций и флагов команды
+   * @throws {UnknownMainCommandError} - если первая команда не является известной
+   * @throws {CommandNotOnStartError} - если первая команда не находится в начале входной строки
+   * @throws {MissingValueError} - если не указано значение опции
+   * @throws {UnknownOptionError} - если указана неизвестная опция
+   * @throws {UnknownFlagError} - если указан неизвестный флаг
+   * @throws {InvalidValueError} - если указано некорректное значение для опции
+   * @throws {MissingArgumentError} - если не указан обязательный аргумент команды
+   */
   parseArgs(lexemes: ILexeme[], source: string): parsedArgs {
     // Получаем из лексем только команды(с проверкой дочерности), сохраняя их порядок
     const commandChain = this.getValidCommandChain(lexemes);
@@ -185,6 +185,7 @@ export class Cli {
         if (option === undefined) {
           throw new errors.UnknownOptionError(lexeme.content);
         }
+        // Встретили опцию - ждем значение на след итерации
         waitingForValue = option;
       } else if (lexeme.type === LexemeType.FLAG) {
         if (waitingForValue !== null) {
@@ -208,6 +209,8 @@ export class Cli {
         }
       } else if (lexeme.type === LexemeType.MAYBE_VALUE) {
         // Для обязательных аргументов имя опции может быть не указано
+        // То есть иф ниже обрабатывает случай, когда не указано имя опции
+        // Но мы встретили лексему-значение
         if (waitingForValue !== null) {
           const possibleValue = lexeme.content;
           if (waitingForValue.valueValidator) {
@@ -229,7 +232,7 @@ export class Cli {
             );
           }
           // Только что взяли значение,
-          // обязательно следующая лексема быть значением не должна
+          // следующая лексема не обязательно будет значением
           waitingForValue = null;
         } else {
           if (
@@ -263,15 +266,17 @@ export class Cli {
   }
 
   /**
-Выполняет команду, представленную в виде строки или шаблонной строки.
-@param {TemplateStringsArray | string[]} rawSource - исходная строка или шаблонная строка, содержащая команду
-@returns {void}
-  */
+   * Выполняет команду, представленную в виде строки или шаблонной строки.
+   * @param {TemplateStringsArray | string[]} rawSource - исходная строка или шаблонная строка, содержащая команду
+   * @returns {void}
+   */
   execute(rawSource: TemplateStringsArray | string[]): void {
+    // Подготавливаем исходную строку(если это шаблонная строка или массив строк)
     const source = prepareSource(rawSource);
     const [allHandlersReturnedTrue, lexemes] = this.runMiddlewares(
       source,
     );
+    // Если хоть один из обработчиков  мидлварей вернул false, то команда не выполняется
     if (!allHandlersReturnedTrue) return;
     const [parsedArgs, command] = this.parseArgs(lexemes, source);
     if (command === null) return;

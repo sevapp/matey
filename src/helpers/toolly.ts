@@ -4,11 +4,11 @@ import { Cli } from '../Tool.ts';
 import * as errors from '../errors/mod.ts';
 
 /**
-Добавляет имя команды, опции и флаги в свойство knownLexemes экземпляра Cli.
-@param command - Команда, лексемы которой будут добавлены в Cli.knownLexemes.
-@param cli - Экземпляр Cli, в который будут добавлены лексемы команды.
-@returns void.
-*/
+ * Добавляет имя команды, опции и флаги в свойство knownLexemes экземпляра Cli.
+ * @param command - Команда, лексемы которой будут добавлены в Cli.knownLexemes.
+ * @param cli - Экземпляр Cli, в который будут добавлены лексемы команды.
+ * @returns void.
+ */
 export function addToKnownLexemes(
   command: ICliCommand,
   cli: Cli,
@@ -27,11 +27,11 @@ export function addToKnownLexemes(
 }
 
 /**
-Проверяет, является ли команда дочерней для другой команды.
-@param parentCmd - Потенциальная родительская команда.
-@param childCmd - Потенциальная дочерняя команда.
-@returns Булево значение, указывающее, является ли дочерняя команда подкомандой родительской команды.
-*/
+ * Проверяет, является ли команда дочерней для другой команды.
+ * @param parentCmd - Потенциальная родительская команда.
+ * @param childCmd - Потенциальная дочерняя команда.
+ * @returns Булево значение, указывающее, является ли дочерняя команда подкомандой родительской команды.
+ */
 export function isChildCommand(
   parentCmd: ICliCommand | null,
   childCmd: ICliCommand | null,
@@ -45,11 +45,11 @@ export function isChildCommand(
 }
 
 /**
-Форматирует строку или массив строк в строку, разделенную пробелами с правильной обработкой кавычек.
-@param rawSource - Строка или массив строк для форматирования.
-@returns Правильно отформатированную строку.
-@throws InvalidSourceError, если ввод недопустимый.
-*/
+ * Форматирует строку или массив строк в строку, разделенную пробелами с правильной обработкой кавычек.
+ * @param rawSource - Строка или массив строк для форматирования.
+ * @returns Правильно отформатированную строку.
+ * @throws InvalidSourceError, если ввод недопустимый.
+ */
 export function prepareSource(
   rawSource: TemplateStringsArray | string[],
 ): string {

@@ -87,7 +87,7 @@ try {
   //   .execute`commit generate  --model gpt-3.5-turbo --maxTokens 50 --short`;
   // cli.execute`commit generate help`;
   await cli
-    .execute`commit generate  --model gpt-3.5-turbo --maxTokens 50`;
+    .execute`commit generate  --model gpt-3.5-turbo --maxTokens 50 --short`;
 } catch (e) {
   console.log(e);
 }
