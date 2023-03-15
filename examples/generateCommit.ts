@@ -25,7 +25,7 @@ export async function generateCommit(
         'model': model,
         'messages': [{
           'role': 'user',
-          'content': prompt.slice(0, 4097),
+          'content': prompt,
         }],
         'max_tokens': maxTokens,
       }),

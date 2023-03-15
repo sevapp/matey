@@ -31,7 +31,7 @@ cli.addCommand(
           required: true,
         })
         .addArgument({
-          name: 'msg',
+          name: '--msg',
           description: 'Message to send',
           type: ArgumentType.OPTION,
           required: true,
@@ -42,7 +42,10 @@ cli.addCommand(
           type: ArgumentType.FLAG,
           required: false,
         })
-        .setHandler((args) => {})
+        .setHandler((args) => {
+          const { '--to': to, '--msg': msg } = args;
+          console.log(`Send ${msg} to ${to} `);
+        })
         .build(),
     )
     .setHandler((args) => {})
@@ -63,7 +66,7 @@ cli.use(middleware);
 
 try {
   cli
-    .execute`email send --to --msg Hello`;
+    .execute`email send --to a@gmail.com --msg Hello`;
 } catch (e) {
   console.log(e);
 }
