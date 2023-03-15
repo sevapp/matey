@@ -23,7 +23,10 @@ export async function generateCommit(
       },
       body: JSON.stringify({
         'model': model,
-        'messages': [{ 'role': 'user', 'content': prompt }],
+        'messages': [{
+          'role': 'user',
+          'content': prompt.slice(0, 4097),
+        }],
         'max_tokens': maxTokens,
       }),
     },

@@ -11,7 +11,12 @@ export interface ILexeme {
   type: LexemeType;
   content: string;
 }
-
+/**
+ * Проверяет, является ли лексема командой
+ * @param term - лексема
+ * @param cli - экземпляр класса Cli
+ * @returns {boolean} - true, если лексема является командой
+ */
 function isCommand(
   term: string,
   cli: Cli,
@@ -19,6 +24,12 @@ function isCommand(
   return cli.knownLexemes.knownCommands.some((key) => key === term);
 }
 
+/**
+ * Проверяет, является ли лексема опцией
+ * @param term - лексема
+ * @param cli - экземпляр класса Cli
+ * @returns {boolean} - true, если лексема является опцией
+ */
 function isOption(
   term: string,
   cli: Cli,
@@ -26,6 +37,12 @@ function isOption(
   return cli.knownLexemes.knownOptions.some((key) => key === term);
 }
 
+/**
+ * Проверяет, является ли лексема флагом
+ * @param term - лексема
+ * @param cli - экземпляр класса Cli
+ * @returns {boolean} - true, если лексема является флагом
+ */
 function isFlag(
   term: string,
   cli: Cli,
@@ -33,6 +50,12 @@ function isFlag(
   return cli.knownLexemes.knownFlags.some((key) => key === term);
 }
 
+/**
+ * Разбивает строку на токены, учитывая кавычки
+ * @param source - исходная строка
+ * @returns {string[]} - массив токенов
+ * @throws {InvalidSourceError} - если исходная строка не может быть корректно разобрана
+ */
 export function quoteAvoidSplit(source: string): string[] {
   const quotesAvoidRegExp = /[^\s"']+|"([^"]*)"|'([^']*)'/g;
   const matches = source.match(quotesAvoidRegExp);
@@ -42,6 +65,13 @@ export function quoteAvoidSplit(source: string): string[] {
   return matches;
 }
 
+/**
+ * Разбивает исходную строку на лексемы
+ * @param source - исходная строка
+ * @param cli - экземпляр класса Cli
+ * @returns {ILexeme[]} - массив лексем
+ * @throws {InvalidSourceError} - если исходная строка не может быть корректно разобрана
+ */
 export function lex(
   source: string,
   cli: Cli,
