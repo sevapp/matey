@@ -12,7 +12,8 @@ export async function generateCommit(
     BREAKING CHANGE: a commit that has a "BREAKING CHANGE" footer or a commit that ends with an exclamation mark (!) after the type or scope introduces changes that break backwards compatibility (corresponds to MAJOR in Semantic Versioning). A BREAKING CHANGE may be part of any commit type.
     Other commit types are allowed. For example, @commitlint/config-conventional (based on the Angular convention) recommends build, chore, ci, docs, style, refactor, perf, test, and others.
     Other commit footers may follow the git trailer format convention.
-    Response me only commit commit message without detailed description:`;
+    Response me only commit commit message without detailed description:`
+      .slice(0, 4096);
   const response = await fetch(
     'https://api.openai.com/v1/chat/completions',
     {
