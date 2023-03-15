@@ -1,53 +1,33 @@
-import { NoValidatorError } from './errors/mod.ts';
-
-type ValidationFunction = (data: string) => boolean;
-export type ValueExamples = string[];
+export type IValidationFunction = (data: string) => boolean;
 
 export class Validator {
-  private validators: {
-    [key: string]: ValidationFunction | [
-      ValidationFunction,
-      ValueExamples,
-    ];
-  } = {};
+  validators: Map<string, (data: string) => boolean>;
 
-  public addValidator(
-    type: string,
-    validator: ValidationFunction,
-    examples?: ValueExamples,
-  ): void {
-    if (!examples) {
-      this.validators[type] = validator, examples;
-    } else this.validators[type] = [validator, examples];
+  constructor() {
+    this.validators = new Map<string, IValidationFunction>();
   }
 
-  public validate(
-    type: string,
-    data: string,
-  ): boolean {
-    if (!(type in this.validators)) {
-      throw new NoValidatorError(
-        `No validator found for type ${type}`,
-      );
-    }
-
-    const validator = this.validators[type];
-    if (Array.isArray(validator)) {
-      return validator[0](data);
-    }
-
-    return validator(data);
+  /**
+   * Добавляет функцию валидации для указанного типа данных.
+   * @param type Тип данных (Может быть элементом перечисления defaultValueType)
+   * @param validator Функция валидации данных.
+   */
+  addValidator(type: string, validator: IValidationFunction) {
+    this.validators.set(type, validator);
   }
 
-  public getExamples(type: string): ValueExamples | null {
-    if (!(type in this.validators)) {
-      throw new NoValidatorError(type);
+  /**
+   * Возвращает функцию валидации для указанного типа данных.
+   * @param type Тип данных (Может быть элементом перечисления defaultValueType)
+   * @returns Функция валидации данных.
+   * @throws Ошибка, если не найдена функция валидации для указанного типа данных.
+   */
+  getValidator(type: string): IValidationFunction {
+    const validator = this.validators.get(type);
+    if (validator) {
+      return validator;
+    } else {
+      throw new Error(`Validator not found for type ${type}`);
     }
-
-    const validator = this.validators[type];
-    if (Array.isArray(validator)) {
-      return validator[1];
-    }
-    return null;
   }
 }

@@ -12,9 +12,11 @@ export class NoCommandHandlerError extends Error {
   }
 }
 
-export class NoCommandPrefixError extends Error {
+export class InvalidOptionCreateError extends Error {
   constructor() {
-    super('Argument must have prefixName if it is not required');
-    this.name = 'NoCommandName';
+    super(
+      '<optionNameRequired> must be true if <required> is false',
+    );
+    this.name = 'InvalidOptionCreateError';
   }
 }
