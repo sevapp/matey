@@ -66,7 +66,7 @@ cli.use(middleware);
 
 try {
   cli
-    .execute`email send --to a@gmail.com --msg Hello`;
+    .execute`email send  Hello a@gmail.com`;
 } catch (e) {
   console.log(e);
 }

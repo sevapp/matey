@@ -29,6 +29,7 @@ interface IKnownLexemes {
 export class Cli {
   private middlewares: IMiddleware[] = [];
 
+  // при добавлении команды сюда добавляются лексемы, чтобы быстро искать их лексером
   public knownLexemes: IKnownLexemes = {
     knownCommands: [],
     knownOptions: [],
@@ -38,7 +39,6 @@ export class Cli {
   public subcommands: ICliCommand[] = [];
 
   /**
-
 Добавляет команду в список команд и устанавливает для нее новые лексемы.
 @param {ICliCommand} command - объект команды
 @throws {Error} - если команда уже существует
@@ -78,6 +78,7 @@ export class Cli {
   */
   getValidCommandChain(lexemes: ILexeme[]): ICliCommand[] {
     const commandTree: (ICliCommand | null)[] = [null];
+    // Получаем из лексем только команды, сохраняя их порядок
     const commands = lexemes.map((lexeme) =>
       lexeme.type === LexemeType.COMMAND
         ? this.commands.concat(this.subcommands).find(
@@ -86,6 +87,7 @@ export class Cli {
         : null
     ).filter((value) => value !== null) as ICliCommand[];
     if (commands.length === 0) throw new errors.NoCommandFoundError();
+    // commandTree заполняется командами до первой недочерней команды
     commands.forEach((command) => {
       if (
         isChildCommand(
@@ -109,6 +111,7 @@ export class Cli {
   */
   runMiddlewares(source: string): [boolean, ILexeme[]] {
     const lexemes = lex(source, this);
+    // allHandlersReturnedTrue - флаг, показывающий, что все middleware вернули true
     let allHandlersReturnedTrue = true;
     for (let i = 0; i < this.middlewares.length; i++) {
       const middleware = this.middlewares[i];
@@ -137,35 +140,41 @@ export class Cli {
 @throws {MissingArgumentError} - если не указан обязательный аргумент команды
   */
   parseArgs(lexemes: ILexeme[], source: string): parsedArgs {
+    // Получаем из лексем только команды(с проверкой дочерности), сохраняя их порядок
     const commandChain = this.getValidCommandChain(lexemes);
     if (
       !this.commands.includes(commandChain[0])
     ) {
       throw new errors.UnknownMainCommandError(commandChain[0].name);
     }
+    //Исполнимая команда - последняя в списке
     const lastCommand = commandChain[commandChain.length - 1];
     const commandChainNames = commandChain.map((command) =>
       command.name
     );
+    // Проверяем, что все команды находятся в начале входной строки
     const commandsOnStart = source.startsWith(
       commandChainNames.join(' '),
     );
     if (!commandsOnStart) {
       throw new errors.CommandNotOnStartError();
     }
+    // Преобразуем аргументы с учтом кавычек(какие-то аргументы-строки могут быть в кавычках)
     const args = quoteAvoidSplit(
       source.replace(commandChainNames.join(' '), ''),
     );
-    const lexemeArgs = lexemes.filter((lexeme) => {
-      return lexeme.type !== LexemeType.COMMAND;
-    });
     const parsedArgs: parsedArgs = [{}, lastCommand];
-    const requiredArgs = lastCommand.arguments?.filter((arg) =>
+
+    // Список обязательных аргументов
+    let requiredArgs = lastCommand.arguments?.filter((arg) =>
       arg.required
     );
-    let requiredArgsGrabbed = 0;
+    // Сколько обязательных аргументов осталось получить
+    let requiredLeast = requiredArgs?.length ?? 0;
+    // Если схавали опцию, то ждем значение
+    //(и знаем на след итерации, к какому аргументу оно должно относиться)
     let waitingForValue: ICommandArgument | null = null;
-    lexemes.forEach((lexeme, index) => {
+    lexemes.forEach((lexeme) => {
       if (lexeme.type === LexemeType.OPTION) {
         if (waitingForValue !== null) {
           throw new errors.MissingValueError(waitingForValue.name);
@@ -184,12 +193,21 @@ export class Cli {
         const flag = lastCommand.arguments?.find((arg) =>
           arg.name === lexeme.content
         );
+        // Вдруг под флаг попала какая-то лексема
         if (flag === undefined) {
           throw new errors.UnknownFlagError(lexeme.content);
         }
+        // parsedArgs[0] - объект с опциями и флагами
+        // parsedArgs[1] - исполнимая команда
         parsedArgs[0][flag.name] = true;
-        flag.required && requiredArgsGrabbed++;
+        if (flag.required) {
+          requiredLeast--;
+          requiredArgs = requiredArgs?.filter((arg) =>
+            arg.name !== flag.name
+          );
+        }
       } else if (lexeme.type === LexemeType.MAYBE_VALUE) {
+        // Для обязательных аргументов имя опции может быть не указано
         if (waitingForValue !== null) {
           const possibleValue = lexeme.content;
           if (waitingForValue.valueValidator) {
@@ -203,12 +221,22 @@ export class Cli {
             }
           }
           parsedArgs[0][waitingForValue.name] = possibleValue;
-          waitingForValue.required && requiredArgsGrabbed++;
+
+          if (waitingForValue.required) {
+            requiredLeast--;
+            requiredArgs = requiredArgs?.filter((arg) =>
+              arg.name !== (waitingForValue as ICommandArgument).name
+            );
+          }
+          // Только что взяли значение,
+          // обязательно следующая лексема быть значением не должна
           waitingForValue = null;
         } else {
           if (
+            //Встретили лексему-значение, но обязательных аргументов не осталось
+            // Ошибка, если не указано имя опции
             requiredArgs === undefined ||
-            requiredArgsGrabbed >= requiredArgs.length
+            requiredLeast === 0
           ) {
             throw new errors.TooManyArgumentsError(
               requiredArgs?.length || 0,
@@ -217,8 +245,7 @@ export class Cli {
             );
           }
           const possibleValue = lexeme.content;
-          const validator =
-            requiredArgs[requiredArgsGrabbed].valueValidator;
+          const validator = requiredArgs[0].valueValidator;
           if (validator) {
             const isValidValue = validator(possibleValue);
             if (!isValidValue) {
@@ -227,9 +254,8 @@ export class Cli {
               );
             }
           }
-          parsedArgs[0][requiredArgs[requiredArgsGrabbed].name] =
-            possibleValue;
-          requiredArgsGrabbed++;
+          parsedArgs[0][requiredArgs[0].name] = possibleValue;
+          requiredLeast--;
         }
       }
     });
