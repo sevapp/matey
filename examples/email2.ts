@@ -1,5 +1,5 @@
 import defaultValidator, {
-  defaultValueType,
+  DefaultValueType,
 } from '../src/defaultValidator.ts';
 import {
   ArgumentType,
@@ -25,7 +25,7 @@ cli.addCommand(
           description: 'Recipient email',
           type: ArgumentType.OPTION,
           valueValidator: defaultValidator.getValidator(
-            defaultValueType.EMAIL,
+            DefaultValueType.EMAIL,
           ),
           optionNameRequired: true,
           required: true,

@@ -1,13 +1,12 @@
 import {
   addToKnownLexemes,
-  HandlerArgs,
   ICliCommand,
   ICommandArgument,
   ILexeme,
   isChildCommand,
   lex,
   LexemeType,
-  parsedArgs,
+  ParsedArgs,
   prepareSource,
   quoteAvoidSplit,
 } from './mod.ts';
@@ -139,7 +138,7 @@ export class Cli {
    * @throws {InvalidValueError} - если указано некорректное значение для опции
    * @throws {MissingArgumentError} - если не указан обязательный аргумент команды
    */
-  parseArgs(lexemes: ILexeme[], source: string): parsedArgs {
+  parseArgs(lexemes: ILexeme[], source: string): ParsedArgs {
     // Получаем из лексем только команды(с проверкой дочерности), сохраняя их порядок
     const commandChain = this.getValidCommandChain(lexemes);
     if (
@@ -163,7 +162,7 @@ export class Cli {
     const args = quoteAvoidSplit(
       source.replace(commandChainNames.join(' '), ''),
     );
-    const parsedArgs: parsedArgs = [{}, lastCommand];
+    const parsedArgs: ParsedArgs = [{}, lastCommand];
 
     // Список обязательных аргументов
     let requiredArgs = lastCommand.arguments?.filter((arg) =>
