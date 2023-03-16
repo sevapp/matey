@@ -41,7 +41,7 @@ export class Cli {
    * @param {ICliCommand} command - объект команды
    * @throws {Error} - если команда уже существует
    */
-  public addCommand(command: ICliCommand) {
+  public addCommand(command: ICliCommand): Cli {
     if (this.commands.some((key) => key.name === command.name)) {
       throw new Error(`Command "${command.name}" already exists.`);
     }
@@ -50,6 +50,7 @@ export class Cli {
       this.subcommands.push(subcommand);
     });
     this.commands.push(command);
+    return this;
   }
 
   /**
@@ -75,7 +76,7 @@ export class Cli {
    * @param {IMiddleware} middleware - объект middleware, содержащий regexp-шаблон и обработчик
    * @throws {DuplicateMiddlewareError} - если middleware с таким же паттерном уже существует
    */
-  public use(middleware: IMiddleware): void {
+  public use(middleware: IMiddleware): Cli {
     const alreadyExists = this.middlewares.some((key) => {
       key.pattern === middleware.pattern;
     });
@@ -84,6 +85,7 @@ export class Cli {
       throw new errors.DuplicateMiddlewareError(middleware.pattern);
     }
     this.middlewares.push(middleware);
+    return this;
   }
 
   /**
