@@ -1,24 +1,15 @@
 import {
-  addToKnownLexemes,
-  HandlerArgs,
+  ArgumentType,
   ICliCommand,
   ICommandArgument,
   ILexeme,
-  isChildCommand,
   lex,
   LexemeType,
-  parsedArgs,
+  ParsedArgs,
   prepareSource,
   quoteAvoidSplit,
 } from './mod.ts';
 import * as errors from './errors/mod.ts';
-
-export interface IMiddleware {
-  pattern: RegExp;
-  handler: (
-    lexemes: ILexeme[],
-  ) => boolean;
-}
 
 interface IKnownLexemes {
   knownCommands: string[];
@@ -27,7 +18,10 @@ interface IKnownLexemes {
 }
 
 export class Cli {
-  private middlewares: IMiddleware[] = [];
+  private middleware: {
+    pattern: RegExp;
+    handler: (lexemes: ILexeme[]) => boolean;
+  }[] = [];
 
   // при добавлении команды сюда добавляются лексемы, чтобы быстро искать их лексером
   public knownLexemes: IKnownLexemes = {
@@ -43,15 +37,34 @@ export class Cli {
    * @param {ICliCommand} command - объект команды
    * @throws {Error} - если команда уже существует
    */
-  public addCommand(command: ICliCommand) {
+  public addCommand(command: ICliCommand): Cli {
     if (this.commands.some((key) => key.name === command.name)) {
       throw new Error(`Command "${command.name}" already exists.`);
     }
-    addToKnownLexemes(command, this);
+    this.addToKnownLexemes(command);
     command.subcommands?.forEach((subcommand) => {
       this.subcommands.push(subcommand);
     });
     this.commands.push(command);
+    return this;
+  }
+
+  /**
+   * Проверяет, является ли команда дочерней для другой команды.
+   * @param parentCmd - Потенциальная родительская команда.
+   * @param childCmd - Потенциальная дочерняя команда.
+   * @returns Булево значение, указывающее, является ли дочерняя команда подкомандой родительской команды.
+   */
+  private isChildCommand(
+    parentCmd: ICliCommand | null,
+    childCmd: ICliCommand | null,
+  ) {
+    if (childCmd === null) return false;
+    if (parentCmd === null) return true;
+
+    return parentCmd.subcommands.some((key) =>
+      key.name === childCmd.name
+    );
   }
 
   /**
@@ -59,15 +72,45 @@ export class Cli {
    * @param {IMiddleware} middleware - объект middleware, содержащий regexp-шаблон и обработчик
    * @throws {DuplicateMiddlewareError} - если middleware с таким же паттерном уже существует
    */
-  public use(middleware: IMiddleware): void {
-    const alreadyExists = this.middlewares.some((key) => {
-      key.pattern === middleware.pattern;
+  public use(
+    pattern: RegExp,
+    handler: (lexemes: ILexeme[]) => boolean,
+  ): Cli {
+    const alreadyExists = this.middleware.some((key) => {
+      key.pattern === pattern;
     });
 
     if (alreadyExists) {
-      throw new errors.DuplicateMiddlewareError(middleware.pattern);
+      throw new errors.DuplicateMiddlewareError(pattern);
     }
-    this.middlewares.push(middleware);
+    this.middleware.push(
+      {
+        pattern,
+        handler,
+      },
+    );
+    return this;
+  }
+
+  /**
+   * Добавляет имя команды, опции и флаги в свойство knownLexemes экземпляра Cli.
+   * @param command - Команда, лексемы которой будут добавлены в Cli.knownLexemes.
+   * @returns void.
+   */
+  private addToKnownLexemes(
+    command: ICliCommand,
+  ): void {
+    this.knownLexemes.knownCommands.push(command.name);
+    command.arguments?.forEach((arg) => {
+      if (arg.type === ArgumentType.OPTION) {
+        this.knownLexemes.knownOptions.push(arg.name);
+      } else if (arg.type === ArgumentType.FLAG) {
+        this.knownLexemes.knownFlags.push(arg.name);
+      }
+    });
+    command.subcommands?.forEach((subcommand) => {
+      this.addToKnownLexemes(subcommand);
+    });
   }
 
   /**
@@ -90,7 +133,7 @@ export class Cli {
     // commandTree заполняется командами до первой недочерней команды
     commands.forEach((command) => {
       if (
-        isChildCommand(
+        this.isChildCommand(
           commandTree[commandTree.length - 1],
           command,
         )
@@ -109,12 +152,12 @@ export class Cli {
    * @param {string} source - входная строка
    * @returns {[boolean, ILexeme[]]} - массив, содержащий результат обработки middleware и список лексем
    */
-  runMiddlewares(source: string): [boolean, ILexeme[]] {
+  execMiddleware(source: string): [boolean, ILexeme[]] {
     const lexemes = lex(source, this);
     // allHandlersReturnedTrue - флаг, показывающий, что все middleware вернули true
     let allHandlersReturnedTrue = true;
-    for (let i = 0; i < this.middlewares.length; i++) {
-      const middleware = this.middlewares[i];
+    for (let i = 0; i < this.middleware.length; i++) {
+      const middleware = this.middleware[i];
       if (middleware.pattern.test(source)) {
         const handlerResult = middleware.handler(lexemes);
         if (!handlerResult) {
@@ -139,7 +182,7 @@ export class Cli {
    * @throws {InvalidValueError} - если указано некорректное значение для опции
    * @throws {MissingArgumentError} - если не указан обязательный аргумент команды
    */
-  parseArgs(lexemes: ILexeme[], source: string): parsedArgs {
+  parseArgs(lexemes: ILexeme[], source: string): ParsedArgs {
     // Получаем из лексем только команды(с проверкой дочерности), сохраняя их порядок
     const commandChain = this.getValidCommandChain(lexemes);
     if (
@@ -163,7 +206,7 @@ export class Cli {
     const args = quoteAvoidSplit(
       source.replace(commandChainNames.join(' '), ''),
     );
-    const parsedArgs: parsedArgs = [{}, lastCommand];
+    const parsedArgs: ParsedArgs = [{}, lastCommand];
 
     // Список обязательных аргументов
     let requiredArgs = lastCommand.arguments?.filter((arg) =>
@@ -273,7 +316,7 @@ export class Cli {
   execute(rawSource: TemplateStringsArray | string[]): void {
     // Подготавливаем исходную строку(если это шаблонная строка или массив строк)
     const source = prepareSource(rawSource);
-    const [allHandlersReturnedTrue, lexemes] = this.runMiddlewares(
+    const [allHandlersReturnedTrue, lexemes] = this.execMiddleware(
       source,
     );
     // Если хоть один из обработчиков  мидлварей вернул false, то команда не выполняется

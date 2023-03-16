@@ -5,7 +5,7 @@ import {
   NoCommandNameError,
 } from './errors/mod.ts';
 
-export type parsedArgs = [{
+export type ParsedArgs = [{
   [key: string]: string | boolean;
 }, ICliCommand | null];
 

@@ -4,12 +4,11 @@ import {
   assertThrows,
   Cli,
   CliCommandBuilder,
-  defaultValueType,
   lex,
   LexemeType,
 } from './mod.ts';
 import * as errors from '../src/errors/mod.ts';
-import defaultValidator from '../src/defaultValidator.ts';
+import validateFunctions from '../src/validateFunctions.ts';
 
 const cli = new Cli();
 
@@ -25,9 +24,7 @@ cli.addCommand(
           name: '--to',
           description: 'Recipient email',
           type: ArgumentType.OPTION,
-          valueValidator: defaultValidator.getValidator(
-            defaultValueType.EMAIL,
-          ),
+          valueValidator: validateFunctions.emailValidate,
           optionNameRequired: true,
           required: true,
         })
@@ -35,9 +32,6 @@ cli.addCommand(
           name: '--msg',
           description: 'Message to send',
           type: ArgumentType.OPTION,
-          valueValidator: defaultValidator.getValidator(
-            defaultValueType.DATA,
-          ),
           required: true,
         })
         .addArgument({
@@ -61,6 +55,7 @@ const tgSend = new CliCommandBuilder()
     description: 'Telegram ID',
     type: ArgumentType.OPTION,
     optionNameRequired: false,
+    valueValidator: (id: string) => /^-?\d{1,19}$/.test(id),
     required: true,
   })
   .addArgument({

@@ -1,5 +1,3 @@
-import { ICliCommand } from '../CliCommandBuilder.ts';
-
 export class CommandNotOnStartError extends Error {
   constructor() {
     super(`Command must be before arguments.`);
