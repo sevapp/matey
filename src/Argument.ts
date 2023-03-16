@@ -10,7 +10,7 @@ export enum ArgumentType {
   OPTION,
 }
 
-type IValidationFunction = (value: string) => boolean;
+type ValidationFunction = (value: string) => boolean;
 
 /**
  * Интерфейс описывает аргументы команды.
@@ -27,7 +27,7 @@ export interface ICommandArgument {
   description: string;
   type: ArgumentType;
 
-  valueValidator?: IValidationFunction;
+  valueValidator?: ValidationFunction;
   optionNameRequired?: boolean;
   required: boolean;
 }

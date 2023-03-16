@@ -11,13 +11,6 @@ import {
 } from './mod.ts';
 import * as errors from './errors/mod.ts';
 
-export interface IMiddleware {
-  pattern: RegExp;
-  handler: (
-    lexemes: ILexeme[],
-  ) => boolean;
-}
-
 interface IKnownLexemes {
   knownCommands: string[];
   knownOptions: string[];
@@ -25,7 +18,10 @@ interface IKnownLexemes {
 }
 
 export class Cli {
-  private middlewares: IMiddleware[] = [];
+  private middleware: {
+    pattern: RegExp;
+    handler: (lexemes: ILexeme[]) => boolean;
+  }[] = [];
 
   // при добавлении команды сюда добавляются лексемы, чтобы быстро искать их лексером
   public knownLexemes: IKnownLexemes = {
@@ -76,15 +72,23 @@ export class Cli {
    * @param {IMiddleware} middleware - объект middleware, содержащий regexp-шаблон и обработчик
    * @throws {DuplicateMiddlewareError} - если middleware с таким же паттерном уже существует
    */
-  public use(middleware: IMiddleware): Cli {
-    const alreadyExists = this.middlewares.some((key) => {
-      key.pattern === middleware.pattern;
+  public use(
+    pattern: RegExp,
+    handler: (lexemes: ILexeme[]) => boolean,
+  ): Cli {
+    const alreadyExists = this.middleware.some((key) => {
+      key.pattern === pattern;
     });
 
     if (alreadyExists) {
-      throw new errors.DuplicateMiddlewareError(middleware.pattern);
+      throw new errors.DuplicateMiddlewareError(pattern);
     }
-    this.middlewares.push(middleware);
+    this.middleware.push(
+      {
+        pattern,
+        handler,
+      },
+    );
     return this;
   }
 
@@ -148,12 +152,12 @@ export class Cli {
    * @param {string} source - входная строка
    * @returns {[boolean, ILexeme[]]} - массив, содержащий результат обработки middleware и список лексем
    */
-  runMiddlewares(source: string): [boolean, ILexeme[]] {
+  execMiddleware(source: string): [boolean, ILexeme[]] {
     const lexemes = lex(source, this);
     // allHandlersReturnedTrue - флаг, показывающий, что все middleware вернули true
     let allHandlersReturnedTrue = true;
-    for (let i = 0; i < this.middlewares.length; i++) {
-      const middleware = this.middlewares[i];
+    for (let i = 0; i < this.middleware.length; i++) {
+      const middleware = this.middleware[i];
       if (middleware.pattern.test(source)) {
         const handlerResult = middleware.handler(lexemes);
         if (!handlerResult) {
@@ -312,7 +316,7 @@ export class Cli {
   execute(rawSource: TemplateStringsArray | string[]): void {
     // Подготавливаем исходную строку(если это шаблонная строка или массив строк)
     const source = prepareSource(rawSource);
-    const [allHandlersReturnedTrue, lexemes] = this.runMiddlewares(
+    const [allHandlersReturnedTrue, lexemes] = this.execMiddleware(
       source,
     );
     // Если хоть один из обработчиков  мидлварей вернул false, то команда не выполняется

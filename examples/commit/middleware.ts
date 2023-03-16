@@ -1,6 +1,6 @@
-import { ILexeme, IMiddleware, LexemeType } from '../../src/mod.ts';
+import { ILexeme, LexemeType } from '../../src/mod.ts';
 
-export const middleware: IMiddleware = {
+export const helpMiddleware = {
   pattern: / help /,
   handler: (lexemes: ILexeme[]) => {
     const toHelpCmds = lexemes.filter((lexeme) => {
