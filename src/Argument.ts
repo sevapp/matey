@@ -1,5 +1,3 @@
-import { IValidationFunction } from './mod.ts';
-
 /**
  * FLAG - Флаг, указывающий на то, что аргумент команды является флагом.
  * Флаг - это аргумент команды, который не имеет значения.
@@ -11,6 +9,8 @@ export enum ArgumentType {
   FLAG,
   OPTION,
 }
+
+type IValidationFunction = (value: string) => boolean;
 
 /**
  * Интерфейс описывает аргументы команды.
