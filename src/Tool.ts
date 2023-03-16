@@ -1,9 +1,8 @@
 import {
-  addToKnownLexemes,
+  ArgumentType,
   ICliCommand,
   ICommandArgument,
   ILexeme,
-  isChildCommand,
   lex,
   LexemeType,
   ParsedArgs,
@@ -46,11 +45,29 @@ export class Cli {
     if (this.commands.some((key) => key.name === command.name)) {
       throw new Error(`Command "${command.name}" already exists.`);
     }
-    addToKnownLexemes(command, this);
+    this.addToKnownLexemes(command);
     command.subcommands?.forEach((subcommand) => {
       this.subcommands.push(subcommand);
     });
     this.commands.push(command);
+  }
+
+  /**
+   * Проверяет, является ли команда дочерней для другой команды.
+   * @param parentCmd - Потенциальная родительская команда.
+   * @param childCmd - Потенциальная дочерняя команда.
+   * @returns Булево значение, указывающее, является ли дочерняя команда подкомандой родительской команды.
+   */
+  private isChildCommand(
+    parentCmd: ICliCommand | null,
+    childCmd: ICliCommand | null,
+  ) {
+    if (childCmd === null) return false;
+    if (parentCmd === null) return true;
+
+    return parentCmd.subcommands.some((key) =>
+      key.name === childCmd.name
+    );
   }
 
   /**
@@ -67,6 +84,27 @@ export class Cli {
       throw new errors.DuplicateMiddlewareError(middleware.pattern);
     }
     this.middlewares.push(middleware);
+  }
+
+  /**
+   * Добавляет имя команды, опции и флаги в свойство knownLexemes экземпляра Cli.
+   * @param command - Команда, лексемы которой будут добавлены в Cli.knownLexemes.
+   * @returns void.
+   */
+  private addToKnownLexemes(
+    command: ICliCommand,
+  ): void {
+    this.knownLexemes.knownCommands.push(command.name);
+    command.arguments?.forEach((arg) => {
+      if (arg.type === ArgumentType.OPTION) {
+        this.knownLexemes.knownOptions.push(arg.name);
+      } else if (arg.type === ArgumentType.FLAG) {
+        this.knownLexemes.knownFlags.push(arg.name);
+      }
+    });
+    command.subcommands?.forEach((subcommand) => {
+      this.addToKnownLexemes(subcommand);
+    });
   }
 
   /**
@@ -89,7 +127,7 @@ export class Cli {
     // commandTree заполняется командами до первой недочерней команды
     commands.forEach((command) => {
       if (
-        isChildCommand(
+        this.isChildCommand(
           commandTree[commandTree.length - 1],
           command,
         )

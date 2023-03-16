@@ -4,7 +4,7 @@ import {
   assertThrows,
   Cli,
   CliCommandBuilder,
-  defaultValueType,
+  DefaultValueType,
   lex,
   LexemeType,
 } from './mod.ts';
@@ -26,7 +26,7 @@ cli.addCommand(
           description: 'Recipient email',
           type: ArgumentType.OPTION,
           valueValidator: defaultValidator.getValidator(
-            defaultValueType.EMAIL,
+            DefaultValueType.EMAIL,
           ),
           optionNameRequired: true,
           required: true,
@@ -36,7 +36,7 @@ cli.addCommand(
           description: 'Message to send',
           type: ArgumentType.OPTION,
           valueValidator: defaultValidator.getValidator(
-            defaultValueType.DATA,
+            DefaultValueType.DATA,
           ),
           required: true,
         })
