@@ -302,6 +302,7 @@ export class Cli {
           }
           parsedArgs[0][requiredArgs[0].name] = possibleValue;
           requiredLeast--;
+          requiredArgs.shift();
         }
       }
     });
