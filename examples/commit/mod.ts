@@ -8,9 +8,4 @@ cli
   .addCommand(generate)
   .use(helpMiddleware.pattern, helpMiddleware.handler);
 
-try {
-  await cli
-    .execute`commit generate  --short`;
-} catch (e) {
-  console.log(e);
-}
+await cli.execute`commit generate --short`;
