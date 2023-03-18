@@ -30,9 +30,8 @@ import {
   Cli,
   CliCommandBuilder,
   HandlerArgs,
-  lex,
+  validateFunctions,
 } from '../mod.ts';
-import validateFunctions from '../src/validateFunctions.ts';
 
 const emailHandler = (options: HandlerArgs) => {
   console.log(
@@ -64,5 +63,4 @@ const emailCommand = new CliCommandBuilder()
 const cli = new Cli();
 cli.addCommand(emailCommand);
 
-// console.log(lex('email example@example.com "Hello, World!"', cli));
 await cli.execute`email example@example.com "Hello, World!"`;

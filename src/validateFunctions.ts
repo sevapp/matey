@@ -55,7 +55,7 @@ function filenameValidate(data: string): boolean {
   return filenameRegex.test(data);
 }
 
-const validateFunctions = {
+export const validateFunctions = {
   emailValidate,
   numberValidate,
   uuidValidate,
@@ -65,5 +65,3 @@ const validateFunctions = {
   timeValidate,
   filenameValidate,
 };
-
-export default validateFunctions;

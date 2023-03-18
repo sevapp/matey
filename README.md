@@ -17,8 +17,8 @@ Matey - модуль для построения консольных коман
   - [Использование](#использование)
     - [Схематичный пример](#схематичный-пример)
     - [Рабочий простой пример](#рабочий-простой-пример)
-  - [Пример](#пример)
-  - [Мидлварь](#мидлварь)
+    - [Пример практический](#пример-практический)
+  - [Middleware](#middleware)
 
 ## Использование
 
@@ -81,7 +81,58 @@ cli.execute`cmdA --argA_1 "Hello" --argA_2 150`;
 
 ### Рабочий простой пример
 
-## Пример
+- Опишем команду и ее аргументы
+  ```ts
+  import {
+    ArgumentType,
+    Cli,
+    CliCommandBuilder,
+    HandlerArgs,
+    validateFunctions,
+  } from '../mod.ts';
+
+  const emailCommand = new CliCommandBuilder()
+    .setName('email')
+    .setDescription('Send an email to a specified email address')
+    .addArgument({
+      name: '--email',
+      description: 'The email address to send the email to',
+      type: ArgumentType.OPTION,
+      valueValidator: validateFunctions.emailValidate,
+      required: true,
+    })
+    .addArgument({
+      name: '--msg',
+      description: 'The message to include in the email',
+      type: ArgumentType.OPTION,
+      required: true,
+    })
+    .setHandler(emailHandler)
+    .build();
+  ```
+
+- Далее продумаем обработку полученных аргументов
+- Пусть это будет "отправка" сообщения по адресу, указанному в аргументе _--email_
+- **Описать обработчик лучше в отдельном файле или до определения команды**
+  ```ts
+  const emailHandler = (options: HandlerArgs) => {
+    console.log(
+      `Email sent to ${options['--email']} with message: ${
+        options['--msg']
+      }`,
+    );
+  };
+  ```
+- Создадим экземпляр _Cli_ и добавим в него команду
+  ```ts
+  const cli = new Cli();
+  cli.addCommand(emailCommand);
+
+  await cli.execute`email example@example.com "Hello, World!"`;
+  // Выведет в консоль: Email sent to example@example.com with message: "Hello, World!"
+  ```
+
+### Пример практический
 
 Пусть мы хотим получать коммит-сообщение по изменениям в проекте командой вида _commit generate_ _[--maxTokens] \<number\> [--short]_
 
@@ -101,7 +152,6 @@ cli
 await cli.execute`commit generate --short`;
 ```
 
-Выглядит классно, верно?
 Посмотрим, как устроен _./command.ts_
 >Мы используем [shelly](https://deno.land/x/shelly@v0.1.1/mod.ts) для получения результата _git diff_
 >А реализацию _generateCommit_ приводить не будем
@@ -168,9 +218,9 @@ export const commit = new CliCommandBuilder()
 
 Вместо _validateFunctions.numberValidate_ можно использовать свою стрелочную функцию вида _string => boolean_
 
-## Мидлварь
+## Middleware
 
-Если перед срабатыванием обработчика команды нужно дополнительно обработать запрос, используйте мидлварь. Если нужно выполнить только мидлварь и не выполнять команду, верните _false_ из обработчика мидлвари.
+Если перед срабатыванием обработчика команды нужно дополнительно обработать запрос, используйте middleware. Если нужно выполнить только middleware и не выполнять команду, верните _false_ из обработчика middleware.
 
 ```ts
 //middleware.ts

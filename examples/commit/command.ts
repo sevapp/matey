@@ -4,9 +4,9 @@ import {
   CliCommandBuilder,
   HandlerArgs,
   ICommandArgument,
+  validateFunctions,
 } from '../../src/mod.ts';
 import { generateCommit } from './generateCommit.ts';
-import validateFunctions from '../../src/validateFunctions.ts';
 // const modelArgument: ICommandArgument = {
 //   name: '--model',
 //   description: 'OpenAI model to use for generating commit message',
