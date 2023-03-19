@@ -1,7 +1,6 @@
 import 'https://deno.land/std@0.179.0/dotenv/load.ts';
 export async function generateCommit(
   changes: string,
-  model: string,
   maxTokens: number,
 ): Promise<string> {
   const apiKey = Deno.env.get('OPENAI_API_KEY');
@@ -23,7 +22,7 @@ export async function generateCommit(
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        'model': model,
+        'model': 'gpt-3.5-turbo',
         'messages': [{
           'role': 'user',
           'content': prompt,
