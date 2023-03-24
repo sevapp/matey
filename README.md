@@ -1,4 +1,5 @@
 # Matey
+[![deno.land/x/matey](https://shield.deno.dev/x/matey)](https://deno.land/x/matey)
 
 Matey - модуль для построения обработчиков консольных команд с субкомандами, аргументами, опциями и флагами.
 
