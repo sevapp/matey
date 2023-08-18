@@ -7,14 +7,6 @@ import {
   validateFunctions,
 } from '../../src/mod.ts';
 import { generateCommit } from './generateCommit.ts';
-// const modelArgument: ICommandArgument = {
-//   name: '--model',
-//   description: 'OpenAI model to use for generating commit message',
-//   type: ArgumentType.OPTION,
-//   valueValidator: (data: string) => data === 'gpt-3.5-turbo',
-//   optionNameRequired: true,
-//   required: false,
-// };
 
 const tokenArgument: ICommandArgument = {
   name: '--maxTokens',
@@ -49,7 +41,6 @@ const generateHandler = async (args: HandlerArgs) => {
 export const generate = new CliCommandBuilder()
   .setName('generate')
   .setDescription('Generate commit message based on git diff')
-  // .addArgument(modelArgument)
   .addArgument(tokenArgument)
   .addArgument(shortArgument)
   .setHandler(generateHandler).build();

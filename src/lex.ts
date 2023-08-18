@@ -58,6 +58,9 @@ function isFlag(
  */
 export function quoteAvoidSplit(source: string): string[] {
   const quotesAvoidRegExp = /[^\s"']+|"([^"]*)"|'([^']*)'/g;
+  if (!(source.includes('"') || source.includes('\''))) {
+    return source.split(' ');
+  }
   const matches = source.match(quotesAvoidRegExp);
   if (matches === null) {
     throw new errors.InvalidSourceError();
