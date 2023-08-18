@@ -8,4 +8,4 @@ cli
   .addCommand(generate)
   .use(helpMiddleware.pattern, helpMiddleware.handler);
 
-await cli.execute`commit generate --short`;
+await cli.execute`commit generate`;

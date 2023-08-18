@@ -63,4 +63,4 @@ const emailCommand = new CliCommandBuilder()
 const cli = new Cli();
 cli.addCommand(emailCommand);
 
-await cli.execute`email example@example.com "Hello, World!"`;
+await cli.execute`email a@r.com --msg "Hello, World!"`;

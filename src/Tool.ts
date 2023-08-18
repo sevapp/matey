@@ -320,6 +320,7 @@ export class Cli {
     const [allHandlersReturnedTrue, lexemes] = this.execMiddleware(
       source,
     );
+    // console.log(allHandlersReturnedTrue, lexemes);
     // Если хоть один из обработчиков  мидлварей вернул false, то команда не выполняется
     if (!allHandlersReturnedTrue) return;
     const [parsedArgs, command] = this.parseArgs(lexemes, source);
